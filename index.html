@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Rig Management</title>
+    <title>Enterprise Rig Management v2</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -34,8 +34,6 @@
             flex-direction: column;
             background: var(--bg);
         }
-
-        /* Профессиональный терминальный хэдер */
         .terminal-header {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -68,8 +66,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
-        /* Визуализация рига с реальными фотографиями */
         .rig-monitor {
             position: relative;
             width: 100%;
@@ -126,25 +122,13 @@
             overflow: hidden;
             position: relative;
         }
-        .hw-slot.active {
-            border-color: var(--accent);
-        }
-        .hw-slot img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .hw-slot.active { border-color: var(--accent); }
+        .hw-slot img { width: 100%; height: 100%; object-fit: cover; }
         .hw-empty {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            color: #3a4456;
-            font-weight: 600;
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8px; color: #3a4456; font-weight: 600;
         }
-
         .rig-telemetry {
             position: absolute;
             bottom: 10px;
@@ -155,134 +139,51 @@
             align-items: center;
             gap: 12px;
         }
-        .telemetry-bars {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .t-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-        .t-track {
-            flex: 1;
-            height: 4px;
-            background: #222736;
-            border-radius: 2px;
-            overflow: hidden;
-        }
+        .telemetry-bars { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .t-row { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 600; color: var(--text-muted); }
+        .t-track { flex: 1; height: 4px; background: #222736; border-radius: 2px; overflow: hidden; }
         .t-fill { height: 100%; transition: width 0.3s; }
-        
         .action-btn-clean {
             background: var(--surface-card);
             border: 1px solid var(--border);
             color: var(--text-main);
-            font-size: 11px;
-            font-weight: 600;
-            padding: 7px 12px;
-            border-radius: 6px;
-            cursor: pointer;
+            font-size: 11px; font-weight: 600;
+            padding: 7px 12px; border-radius: 6px; cursor: pointer;
         }
-        .action-btn-clean:active { background: #283044; }
-
-        .nav-tabs {
-            display: flex;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-        }
+        .nav-tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
         .tab-item {
-            flex: 1;
-            padding: 12px 4px;
-            background: none;
-            border: none;
-            border-bottom: 2px solid transparent;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
+            flex: 1; padding: 12px 4px; background: none; border: none;
+            border-bottom: 2px solid transparent; color: var(--text-muted);
+            font-size: 11px; font-weight: 600; cursor: pointer; text-align: center;
         }
-        .tab-item.active {
-            color: var(--text-main);
-            border-bottom-color: var(--accent);
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .content-container {
-            flex: 1;
-            padding: 12px;
-            padding-bottom: 40px;
-        }
+        .tab-item.active { color: var(--text-main); border-bottom-color: var(--accent); background: rgba(59, 130, 246, 0.05); }
+        .content-container { flex: 1; padding: 12px; padding-bottom: 40px; }
         .tab-pane { display: none; flex-direction: column; gap: 8px; }
         .tab-pane.active { display: flex; }
-
         .catalog-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--surface-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 12px;
+            display: flex; align-items: center; gap: 12px;
+            background: var(--surface-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 12px;
         }
         .card-thumb {
-            width: 52px;
-            height: 52px;
-            border-radius: 6px;
-            background: #0f1115;
-            border: 1px solid var(--border);
-            object-fit: cover;
-            flex-shrink: 0;
+            width: 52px; height: 52px; border-radius: 6px;
+            background: #0f1115; border: 1px solid var(--border);
+            object-fit: cover; flex-shrink: 0;
         }
         .card-info { flex: 1; min-width: 0; }
-        .card-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .card-specs {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 3px;
-        }
-        .card-alert {
-            font-size: 10px;
-            color: #ef4444;
-            font-weight: 600;
-            margin-top: 2px;
-        }
-        
+        .card-title { font-size: 13px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-specs { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+        .card-alert { font-size: 10px; color: #ef4444; font-weight: 600; margin-top: 2px; }
         .purchase-btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 11px;
-            font-weight: 600;
-            min-width: 80px;
-            cursor: pointer;
-            text-align: center;
+            background: var(--accent); color: #fff; border: none;
+            border-radius: 6px; padding: 8px 12px; font-size: 11px; font-weight: 600;
+            min-width: 80px; cursor: pointer; text-align: center;
         }
         .purchase-btn.usd { background: var(--success); }
         .purchase-btn:disabled { background: #222736; color: #4e5b73; cursor: not-allowed; }
-
         .float-indicator {
-            position: absolute;
-            font-weight: 700;
-            font-size: 15px;
-            color: var(--success);
-            pointer-events: none;
-            animation: floatUpClean 0.6s ease-out forwards;
-            z-index: 100;
+            position: absolute; font-weight: 700; font-size: 15px; color: var(--success);
+            pointer-events: none; animation: floatUpClean 0.6s ease-out forwards; z-index: 100;
         }
         @keyframes floatUpClean {
             0% { opacity: 1; transform: translateY(0); }
@@ -307,16 +208,15 @@
         </div>
     </div>
 
-    <!-- Монитор рига с реальными фото -->
     <div class="rig-monitor" id="rigMonitor">
         <img class="rig-photo-bg" src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=800&q=80" alt="">
         <div class="rig-workspace">
             <div class="rack-title">
-                <span>Активная стойка (PCIe)</span>
+                <span>Стойка оборудования</span>
                 <span id="rackSlotsCount">0 / 6</span>
             </div>
             <div class="hardware-grid" id="hardwareGrid"></div>
-            <div style="font-size:9px;color:var(--text-muted);text-align:right">Нажмите для майнинга</div>
+            <div style="font-size:9px;color:var(--text-muted);text-align:right">Клик для майнинга</div>
         </div>
         <div class="rig-telemetry">
             <div class="telemetry-bars">
@@ -350,7 +250,7 @@
         <div class="tab-pane" id="pane-infra"></div>
         <div class="tab-pane" id="pane-market">
             <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;">
-                <div class="metric-label" style="margin-bottom:4px">Спотовый курс MGC / USD</div>
+                <div class="metric-label" style="margin-bottom:4px">Курс MGC / USD</div>
                 <div style="font-size:24px;font-weight:700;color:var(--success);margin-bottom:12px" id="rateBox">$0.50</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
                     <button class="purchase-btn usd" onclick="sellCrypto(0.5)">Продать 50%</button>
@@ -365,7 +265,6 @@
 const tg = window.Telegram?.WebApp;
 if (tg) tg.expand();
 
-// 18 моделей оборудования с прямыми ссылками на реальные фотографии видеокарт высокого качества
 const GPU_CATALOG = [
     { id: 'g1', name: 'GTX 750 Ti 2GB', photo: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?auto=format&fit=crop&w=400&q=80', curr: 'mgc', cost: 20, pps: 0.35, watts: 55, heat: 0.2 },
     { id: 'g2', name: 'GTX 1050 Ti 4GB', photo: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=400&q=80', curr: 'mgc', cost: 120, pps: 1.6, watts: 75, heat: 0.35 },
@@ -388,33 +287,33 @@ const GPU_CATALOG = [
 ];
 
 const RIGS_CATALOG = [
-    { id: 'r1', name: 'Открытый каркас (6 слотов)', photo: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=400&q=80', slots: 6, cost: 0 },
-    { id: 'r2', name: 'Алюминиевая стойка Pro (12 слотов)', photo: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=400&q=80', slots: 12, cost: 4500, curr: 'mgc' },
-    { id: 'r3', name: 'Серверный шкаф 24U (18 слотов)', photo: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400&q=80', slots: 18, cost: 32000, curr: 'usd' },
-    { id: 'r4', name: 'Промышленный дата-центр (24 слота)', photo: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400&q=80', slots: 24, cost: 250000, curr: 'usd' }
+    { id: 'r1', name: 'Каркас (6 слотов)', slots: 6, cost: 0 },
+    { id: 'r2', name: 'Стойка Pro (12 слотов)', slots: 12, cost: 4500, curr: 'mgc' },
+    { id: 'r3', name: 'Шкаф 24U (18 слотов)', slots: 18, cost: 32000, curr: 'usd' },
+    { id: 'r4', name: 'Дата-центр (24 слота)', slots: 24, cost: 250000, curr: 'usd' }
 ];
 
 const OC_CATALOG = [
-    { id: 'o1', name: 'Термопаста MX-4', desc: '+0.5 к силе клика', cost: 25, ppc: 0.5, curr: 'mgc' },
-    { id: 'o2', name: 'Прошивка таймингов BIOS', desc: '+2.5 к силе клика', cost: 180, ppc: 2.5, curr: 'mgc' },
-    { id: 'o3', name: 'Андервольтинг ядер', desc: '+12 к силе клика', cost: 1200, ppc: 12, curr: 'mgc' },
-    { id: 'o4', name: 'Жидкий металл Grizzly', desc: '+55 к силе клика', cost: 750, ppc: 55, curr: 'usd' },
-    { id: 'o5', name: 'Кастомное ядро HiveOS PRO', desc: '+300 к силе клика', cost: 4200, ppc: 300, curr: 'usd' }
+    { id: 'o1', name: 'Термопаста MX-4', desc: '+0.5 к клику', cost: 25, ppc: 0.5, curr: 'mgc' },
+    { id: 'o2', name: 'Прошивка BIOS', desc: '+2.5 к клику', cost: 180, ppc: 2.5, curr: 'mgc' },
+    { id: 'o3', name: 'Андервольтинг', desc: '+12 к клику', cost: 1200, ppc: 12, curr: 'mgc' },
+    { id: 'o4', name: 'Жидкий металл', desc: '+55 к клику', cost: 750, ppc: 55, curr: 'usd' },
+    { id: 'o5', name: 'HiveOS PRO', desc: '+300 к клику', cost: 4200, ppc: 300, curr: 'usd' }
 ];
 
 const INFRA_CATALOG = [
-    { id: 'i1', name: 'Блок питания 750W', desc: '+750W к лимиту мощности', val: 750, cost: 80, curr: 'mgc', type: 'watt' },
-    { id: 'i2', name: 'Серверный БП 1600W', desc: '+1600W к лимиту мощности', val: 1600, cost: 320, curr: 'usd', type: 'watt' },
-    { id: 'i3', name: 'Кулеры Delta 4000 RPM', desc: 'Отвод тепла +3 ед/с', val: 3, cost: 150, curr: 'mgc', type: 'cool' },
-    { id: 'i4', name: 'Иммерсионная система', desc: 'Отвод тепла +20 ед/с', val: 20, cost: 12000, curr: 'usd', type: 'cool' }
+    { id: 'i1', name: 'БП 750W', desc: '+750W мощности', val: 750, cost: 80, curr: 'mgc', type: 'watt' },
+    { id: 'i2', name: 'Серверный БП 1600W', desc: '+1600W мощности', val: 1600, cost: 320, curr: 'usd', type: 'watt' },
+    { id: 'i3', name: 'Кулеры Delta', desc: 'Отвод тепла +3', val: 3, cost: 150, curr: 'mgc', type: 'cool' },
+    { id: 'i4', name: 'Иммерсионная система', desc: 'Отвод тепла +20', val: 20, cost: 12000, curr: 'usd', type: 'cool' }
 ];
 
-let state = JSON.parse(localStorage.getItem('enterpriseRigV2')) || {
+let state = JSON.parse(localStorage.getItem('enterpriseRigV3')) || {
     mgc: 0, usd: 0, clickPower: 1, maxWatts: 600, cooling: 1.5, temp: 35,
     activeRig: 'r1', ownedRigs: { r1: 1 }, owned: {}, rate: 0.50
 };
 
-function save() { localStorage.setItem('enterpriseRigV2', JSON.stringify(state)); }
+function save() { localStorage.setItem('enterpriseRigV3', JSON.stringify(state)); }
 
 function fmt(n) {
     if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
@@ -507,11 +406,11 @@ window.buyItem = function(type, id) {
 
         if (type === 'gpu') {
             if (getTotalCardsCount() >= getTotalSlots()) {
-                alert('Лимит слотов стойки исчерпан. Приобретите более вместительный корпус.');
+                alert('Лимит слотов стойки исчерпан.');
                 return;
             }
             if (getUsedWatts() + item.watts > state.maxWatts) {
-                alert('Превышен лимит мощности БП. Требуется модернизация питания.');
+                alert('Превышен лимит мощности БП.');
                 return;
             }
         }
@@ -558,7 +457,7 @@ function renderHardwareRack() {
     for (let i = 0; i < maxSlots; i++) {
         const card = installedCards[i];
         if (card) {
-            html += `<div class="hw-slot active"><img src="${card.photo}" alt="" onerror="this.style.display='none'"></div>`;
+            html += `<div class="hw-slot active"><img src="${card.photo}" alt=""></div>`;
         } else {
             html += `<div class="hw-slot"><div class="hw-empty">PCIe</div></div>`;
         }
@@ -576,11 +475,11 @@ function renderAll() {
         const noSlots = getTotalCardsCount() >= getTotalSlots();
         const noWatt = getUsedWatts() + g.watts > state.maxWatts;
         return `<div class="catalog-card">
-            <img class="card-thumb" src="${g.photo}" alt="" onerror="this.style.display='none'">
+            <img class="card-thumb" src="${g.photo}" alt="">
             <div class="card-info">
                 <div class="card-title">${g.name} <span style="font-size:10px;color:var(--text-muted)">[x${cnt}]</span></div>
                 <div class="card-specs">+${fmt(g.pps)} MGC/с • ${g.watts}W</div>
-                ${noSlots ? '<div class="card-alert">Нет слотов в корпусе</div>' : (noWatt ? '<div class="card-alert">Не хватает питания БП</div>' : '')}
+                ${noSlots ? '<div class="card-alert">Нет слотов</div>' : (noWatt ? '<div class="card-alert">Мало питания</div>' : '')}
             </div>
             <button class="purchase-btn ${g.curr === 'usd' ? 'usd' : ''}" ${!canAfford || noSlots || noWatt ? 'disabled' : ''} onclick="buyItem('gpu','${g.id}')">
                 ${g.curr === 'usd' ? '$' : ''}${fmt(p)} ${g.curr === 'mgc' ? 'MGC' : ''}
@@ -592,10 +491,9 @@ function renderAll() {
         const owned = !!state.ownedRigs[r.id];
         const active = state.activeRig === r.id;
         return `<div class="catalog-card">
-            <img class="card-thumb" src="${r.photo}" alt="" onerror="this.style.display='none'">
             <div class="card-info">
                 <div class="card-title">${r.name}</div>
-                <div class="card-specs">Слотов расширения: ${r.slots}</div>
+                <div class="card-specs">Слотов: ${r.slots}</div>
             </div>
             <button class="purchase-btn ${r.curr === 'usd' ? 'usd' : ''}" ${active ? 'disabled' : ''} onclick="buyItem('rig','${r.id}')">
                 ${active ? 'Активен' : (owned ? 'Выбрать' : (r.curr === 'usd' ? '$' : '') + fmt(r.cost))}
@@ -609,7 +507,7 @@ function renderAll() {
         const can = o.curr === 'mgc' ? state.mgc >= p : state.usd >= p;
         return `<div class="catalog-card">
             <div class="card-info">
-                <div class="card-title">${o.name} <span style="font-size:10px;color:var(--text-muted)">[Ур. ${cnt}]</span></div>
+                <div class="card-title">${o.name} <span style="font-size:10px;color:var(--text-muted)">[Ур.${cnt}]</span></div>
                 <div class="card-specs">${o.desc}</div>
             </div>
             <button class="purchase-btn ${o.curr === 'usd' ? 'usd' : ''}" ${!can ? 'disabled' : ''} onclick="buyItem('oc','${o.id}')">
@@ -664,9 +562,7 @@ setInterval(() => {
     } else {
         state.temp = Math.max(32, state.temp - 0.5);
     }
-
     state.rate = Math.max(0.2, Math.min(2.5, state.rate + (Math.random() - 0.49) * 0.02));
-
     save(); updateUI();
 }, 1000);
 
