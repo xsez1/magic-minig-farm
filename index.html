@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRYPTO TYCOON // ULTIMATE EDITION</title>
+    <title>CRYPTO EMPIRE // REAL HARDWARE RIG</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-base: #06080c;
-            --surface: #0e131f;
-            --surface-card: #141c2e;
+            --bg-deep: #05070b;
+            --bg-panel: #0b0f19;
+            --bg-card: #111827;
             --border: rgba(255, 255, 255, 0.08);
             --gold: #f59e0b;
-            --gold-glow: rgba(245, 158, 11, 0.2);
             --green: #10b981;
             --blue: #3b82f6;
             --red: #ef4444;
@@ -22,9 +21,9 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0;
-            background: var(--bg-base);
+            background: var(--bg-deep);
             color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
             user-select: none;
             overflow-x: hidden;
         }
@@ -34,47 +33,157 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(180deg, #0b101a 0%, #06080c 100%);
+            background: linear-gradient(180deg, #0d1322 0%, var(--bg-deep) 100%);
         }
 
-        /* Шапка телеметрии */
+        /* Верхняя телеметрия */
         .header {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 6px;
             padding: 10px 12px;
-            background: rgba(10, 15, 26, 0.92);
-            backdrop-filter: blur(12px);
+            background: rgba(11, 15, 25, 0.94);
+            backdrop-filter: blur(14px);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            z-index: 40;
+            z-index: 50;
         }
         .h-box {
-            background: var(--surface-card);
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 7px 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 7px 9px;
         }
-        .h-lbl { font-size: 9px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.5px; }
-        .h-val { font-size: 13px; font-weight: 800; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .h-lbl { font-size: 9px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.6px; }
+        .h-val { font-size: 13px; font-weight: 900; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Рабочая зона рига (Индустриальный Canvas-рендеринг) */
+        /* Вьюпорт реального корпуса с установленными видеокартами */
         .rig-viewport {
             position: relative;
             width: 100%;
-            height: 220px;
-            background: #080c14;
-            border-bottom: 1px solid var(--border);
+            height: 255px;
+            background: #080b12;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.25);
             overflow: hidden;
             cursor: pointer;
         }
-        .rig-canvas {
+        /* Фоновое фото корпуса rig.jpg + индустриальная подложка */
+        .rig-bg-photo {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
+            object-fit: cover;
+            opacity: 0.42;
+            filter: contrast(1.15);
+            pointer-events: none;
+        }
+        .rig-chassis {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            height: 175px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.78) 0%, rgba(9, 13, 22, 0.92) 100%);
+            border: 2px solid #334155;
+            border-radius: 10px;
+            box-shadow: inset 0 0 25px #000, 0 8px 25px rgba(0,0,0,0.7);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        .chassis-rail {
+            height: 4px;
+            background: linear-gradient(90deg, #475569, #94a3b8, #475569);
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+        /* Сетка PCIe-слотов внутри корпуса */
+        .pcie-slots-grid {
+            flex: 1;
+            display: grid;
+            gap: 6px;
+            padding: 6px 2px;
+            align-items: stretch;
+        }
+        .pcie-slot {
+            position: relative;
+            background: rgba(5, 8, 15, 0.75);
+            border: 1px dashed rgba(148, 163, 184, 0.22);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Вставленная в слот видеокарта */
+        .pcie-slot.installed {
+            border: 1px solid rgba(245, 158, 11, 0.75);
+            background: #0f172a;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+            animation: cardInsert 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .pcie-slot.installed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
         }
+        /* Кабель питания PCIe 8-pin сверху карты */
+        .pcie-power-cable {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 7px;
+            background: #1e293b;
+            border-bottom: 2px solid #f59e0b;
+            border-radius: 0 0 3px 3px;
+            z-index: 3;
+        }
+        /* Индикатор работы и вращающийся блик кулера */
+        .pcie-led {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: blinkLed 0.9s infinite alternate;
+            z-index: 4;
+        }
+        .pcie-label {
+            position: absolute;
+            bottom: 2px;
+            left: 3px;
+            right: 11px;
+            font-size: 7px;
+            font-weight: 800;
+            color: #fff;
+            background: rgba(0,0,0,0.75);
+            padding: 1px 3px;
+            border-radius: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 3;
+        }
+        @keyframes cardInsert {
+            0% { transform: translateY(-28px) scale(1.08); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes blinkLed {
+            from { opacity: 0.45; }
+            to { opacity: 1; }
+        }
+
+        /* Датчики и кнопка продувки внизу вьюпорта */
         .rig-hud {
             position: absolute;
             bottom: 10px;
@@ -83,32 +192,32 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            z-index: 10;
+            gap: 10px;
+            z-index: 15;
             pointer-events: none;
         }
         .sensors { flex: 1; display: flex; flex-direction: column; gap: 4px; pointer-events: auto; }
-        .sensor-row { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; text-shadow: 0 1px 3px #000; }
-        .s-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; }
-        .s-fill { height: 100%; transition: width 0.3s, background 0.3s; }
+        .sensor-row { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; text-shadow: 0 1px 4px #000; }
+        .s-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; }
+        .s-fill { height: 100%; transition: width 0.25s, background 0.25s; }
         .cool-btn {
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(37, 99, 235, 0.25);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(96, 165, 250, 0.4);
-            color: #93c5fd;
+            border: 1px solid rgba(96, 165, 250, 0.55);
+            color: #bfdbfe;
             font-size: 11px;
-            font-weight: 700;
-            padding: 7px 11px;
+            font-weight: 800;
+            padding: 8px 11px;
             border-radius: 8px;
             cursor: pointer;
             pointer-events: auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-        .cool-btn:active { background: var(--blue); color: #fff; }
+        .cool-btn:active { background: #2563eb; color: #fff; }
 
         /* Навигация */
         .tabs {
             display: flex;
-            background: var(--surface);
+            background: var(--bg-panel);
             border-bottom: 1px solid var(--border);
             overflow-x: auto;
             scrollbar-width: none;
@@ -125,80 +234,70 @@
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            transition: 0.2s;
         }
         .tab-b.active {
             color: var(--gold);
             border-bottom-color: var(--gold);
-            background: var(--gold-glow);
+            background: rgba(245, 158, 11, 0.12);
         }
 
-        /* Контент каталогов */
+        /* Карточки магазина */
         .main-pane { flex: 1; padding: 12px; padding-bottom: 40px; }
-        .pane-content { display: none; flex-direction: column; gap: 8px; }
+        .pane-content { display: none; flex-direction: column; gap: 9px; }
         .pane-content.active { display: flex; }
 
         .item-card {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: var(--surface-card);
+            gap: 11px;
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 10px 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-            transition: border-color 0.2s;
+            padding: 10px;
         }
-        .item-card:hover { border-color: rgba(245, 158, 11, 0.3); }
-        .item-icon-box {
-            width: 52px;
-            height: 52px;
-            border-radius: 10px;
-            background: #090e18;
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
+        .item-photo {
+            width: 58px;
+            height: 58px;
+            border-radius: 9px;
+            background: #090d16;
+            border: 1px solid rgba(255,255,255,0.1);
+            object-fit: cover;
             flex-shrink: 0;
-            box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
         }
         .item-info { flex: 1; min-width: 0; }
         .item-title-row { display: flex; align-items: center; gap: 6px; }
-        .item-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .badge { font-size: 10px; font-weight: 800; background: #1a2438; color: var(--gold); padding: 2px 6px; border-radius: 5px; border: 1px solid rgba(245,158,11,0.3); }
+        .item-name { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .badge { font-size: 10px; font-weight: 800; background: rgba(245,158,11,0.16); color: var(--gold); padding: 2px 6px; border-radius: 5px; border: 1px solid rgba(245,158,11,0.3); }
         .item-specs { font-size: 11px; color: var(--muted); margin-top: 3px; }
         .item-warn { font-size: 10px; color: var(--red); font-weight: 700; margin-top: 2px; }
 
         .buy-btn {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: #06080c;
+            color: #05070b;
             border: none;
             border-radius: 9px;
             padding: 9px 12px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 900;
             min-width: 86px;
             cursor: pointer;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
         }
-        .buy-btn.usd { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
-        .buy-btn:disabled { background: #131b2e; color: #475569; cursor: not-allowed; box-shadow: none; }
+        .buy-btn.usd { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; }
+        .buy-btn:disabled { background: #182032; color: #475569; cursor: not-allowed; }
 
-        /* Всплывающие цифры */
         .float-num {
             position: absolute;
             font-weight: 900;
-            font-size: 16px;
+            font-size: 17px;
             color: #fbbf24;
             text-shadow: 0 2px 8px #000;
             pointer-events: none;
             animation: floatUp 0.6s ease-out forwards;
-            z-index: 50;
+            z-index: 100;
         }
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
+            0% { opacity: 1; transform: translateY(0) scale(0.95); }
             100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
         }
     </style>
@@ -220,9 +319,14 @@
         </div>
     </div>
 
-    <!-- Индустриальный вьюпорт корпуса с интерактивным ригом -->
+    <!-- Вьюпорт корпуса с физически вставляемыми картами -->
     <div class="rig-viewport" id="rigViewport">
-        <canvas class="rig-canvas" id="rigCanvas"></canvas>
+        <img class="rig-bg-photo" id="rigBgImg" src="rig.jpg" alt="">
+        <div class="rig-chassis">
+            <div class="chassis-rail"></div>
+            <div class="pcie-slots-grid" id="pcieSlotsGrid"></div>
+            <div class="chassis-rail"></div>
+        </div>
         <div class="rig-hud">
             <div class="sensors">
                 <div class="sensor-row">
@@ -254,10 +358,10 @@
         <div class="pane-content" id="pane-oc"></div>
         <div class="pane-content" id="pane-infra"></div>
         <div class="pane-content" id="pane-market">
-            <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
                 <div class="h-lbl">Курс обмена MGC / USD</div>
-                <div style="font-size:26px;font-weight:800;color:var(--green);margin:8px 0" id="rateBox">$0.50</div>
-                <p style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.4">Продавайте намайненную криптовалюту на пике рыночного курса, чтобы накапливать доллары и покупать элитное железо.</p>
+                <div style="font-size:26px;font-weight:900;color:var(--green);margin:8px 0" id="rateBox">$0.50</div>
+                <p style="font-size:11px;color:var(--muted);margin-bottom:14px">Продавайте добытую монету за доллары ($), чтобы покупать топовые видеокарты и промышленные стойки.</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
                     <button class="buy-btn usd" onclick="sellCrypto(0.5)">Продать 50%</button>
                     <button class="buy-btn usd" onclick="sellCrypto(1)">Продать ВСЁ</button>
@@ -271,34 +375,57 @@
 const tg = window.Telegram?.WebApp;
 if (tg) tg.expand();
 
-// Полный каталог из 18 моделей с уникальными иконками и характеристиками
+// Генератор фотореалистичных SVG-рендеров видеокарт (используется мгновенно, если файл .jpg еще не загружен в GitHub)
+function makeGpuRender(accent, fans, label) {
+    let fanSvg = '';
+    if (fans === 1) {
+        fanSvg = `<circle cx="50" cy="50" r="26" fill="#0b0f17" stroke="${accent}" stroke-width="2.5"/><circle cx="50" cy="50" r="8" fill="#1e293b"/><path d="M50 24 L56 44 L50 50 Z M76 50 L56 56 L50 50 Z M50 76 L44 56 L50 50 Z M24 50 L44 44 L50 50 Z" fill="#64748b"/>`;
+    } else if (fans === 2) {
+        fanSvg = `<circle cx="32" cy="50" r="19" fill="#0b0f17" stroke="${accent}" stroke-width="2"/><circle cx="68" cy="50" r="19" fill="#0b0f17" stroke="${accent}" stroke-width="2"/><circle cx="32" cy="50" r="6" fill="#334155"/><circle cx="68" cy="50" r="6" fill="#334155"/>`;
+    } else if (fans === 3) {
+        fanSvg = `<circle cx="23" cy="50" r="14" fill="#0b0f17" stroke="${accent}" stroke-width="2"/><circle cx="50" cy="50" r="14" fill="#0b0f17" stroke="${accent}" stroke-width="2"/><circle cx="77" cy="50" r="14" fill="#0b0f17" stroke="${accent}" stroke-width="2"/>`;
+    } else {
+        fanSvg = `<rect x="14" y="24" width="72" height="52" rx="4" fill="#0f172a" stroke="${accent}" stroke-width="2"/><line x1="22" y1="34" x2="78" y2="34" stroke="#475569" stroke-width="3"/><line x1="22" y1="45" x2="78" y2="45" stroke="#475569" stroke-width="3"/><line x1="22" y1="56" x2="78" y2="56" stroke="#475569" stroke-width="3"/><line x1="22" y1="67" x2="78" y2="67" stroke="#475569" stroke-width="3"/>`;
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#090d16"/></linearGradient></defs>
+        <rect width="100" height="100" fill="#060911"/>
+        <rect x="8" y="18" width="84" height="64" rx="8" fill="url(#g)" stroke="#334155" stroke-width="2"/>
+        <rect x="14" y="14" width="40" height="4" rx="2" fill="${accent}"/>
+        ${fanSvg}
+        <rect x="18" y="82" width="46" height="5" fill="#d97706"/>
+    </svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+// Каталог из 18 карт: проверяет реальное фото (gpu01.jpg / gpu1.jpg / gpu2.jpg / asic.jpg), а при отсутствии ставит качественный 3D-рендер
 const GPU_CATALOG = [
-    { id: 'g1', name: 'GTX 750 Ti 2GB', icon: '⚡', curr: 'mgc', cost: 20, pps: 0.35, watts: 55, heat: 0.2 },
-    { id: 'g2', name: 'GTX 1050 Ti 4GB', icon: '🎮', curr: 'mgc', cost: 120, pps: 1.6, watts: 75, heat: 0.35 },
-    { id: 'g3', name: 'RX 470 4GB Mining', icon: '⛏️', curr: 'mgc', cost: 590, pps: 6.8, watts: 125, heat: 0.65 },
-    { id: 'g4', name: 'GTX 1060 6GB Dual', icon: '🔥', curr: 'mgc', cost: 2800, pps: 26, watts: 120, heat: 0.75 },
-    { id: 'g5', name: 'RX 580 8GB Nitro+', icon: '🚀', curr: 'mgc', cost: 13000, pps: 105, watts: 185, heat: 1.0 },
-    { id: 'g6', name: 'GTX 1080 Ti 11GB', icon: '💎', curr: 'usd', cost: 1100, pps: 390, watts: 250, heat: 1.4 },
-    { id: 'g7', name: 'RTX 2070 Super', icon: '🔮', curr: 'usd', cost: 5200, pps: 1550, watts: 215, heat: 1.5 },
-    { id: 'g8', name: 'RTX 3060 Ti LHR', icon: '🛡️', curr: 'usd', cost: 22000, pps: 5900, watts: 200, heat: 1.7 },
-    { id: 'g9', name: 'RX 6800 XT Red Devil', icon: '🐉', curr: 'usd', cost: 88000, pps: 20000, watts: 300, heat: 2.1 },
-    { id: 'g10', name: 'RTX 3080 Ti Suprim', icon: '👑', curr: 'usd', cost: 350000, pps: 71000, watts: 350, heat: 2.6 },
-    { id: 'g11', name: 'RTX 3090 24GB NVLink', icon: '🌌', curr: 'usd', cost: 1300000, pps: 240000, watts: 380, heat: 3.1 },
-    { id: 'g12', name: 'RTX 4080 Super Noctua', icon: '🦉', curr: 'usd', cost: 5000000, pps: 840000, watts: 320, heat: 2.9 },
-    { id: 'g13', name: 'RTX 4090 Liquid Matrix', icon: '💧', curr: 'usd', cost: 19000000, pps: 3000000, watts: 450, heat: 3.7 },
-    { id: 'g14', name: 'NVIDIA A100 80GB', icon: '🧠', curr: 'usd', cost: 78000000, pps: 11000000, watts: 400, heat: 4.0 },
-    { id: 'g15', name: 'Antminer L7 Scrypt', icon: '⚙️', curr: 'usd', cost: 310000000, pps: 40000000, watts: 3400, heat: 6.2 },
-    { id: 'g16', name: 'WhatsMiner M50S++', icon: '🏭', curr: 'usd', cost: 1200000000, pps: 148000000, watts: 3600, heat: 7.0 },
-    { id: 'g17', name: 'Antminer S21 Hydro', icon: '🌊', curr: 'usd', cost: 5000000000, pps: 560000000, watts: 5200, heat: 8.2 },
-    { id: 'g18', name: 'NVIDIA H200 AI Cluster', icon: '🪐', curr: 'usd', cost: 23000000000, pps: 2300000000, watts: 8500, heat: 11.5 }
+    { id: 'g1', name: 'GTX 750 Ti 2GB', photo: 'gpu01.jpg', fallback: makeGpuRender('#22c55e', 1), curr: 'mgc', cost: 20, pps: 0.35, watts: 55, heat: 0.2 },
+    { id: 'g2', name: 'GTX 1050 Ti 4GB', photo: 'gpu02.jpg', fallback: makeGpuRender('#10b981', 1), curr: 'mgc', cost: 120, pps: 1.6, watts: 75, heat: 0.35 },
+    { id: 'g3', name: 'RX 470 4GB Mining', photo: 'gpu03.jpg', fallback: makeGpuRender('#ef4444', 2), curr: 'mgc', cost: 590, pps: 6.8, watts: 125, heat: 0.65 },
+    { id: 'g4', name: 'GTX 1060 6GB Dual', photo: 'gpu1.jpg', fallback: makeGpuRender('#3b82f6', 2), curr: 'mgc', cost: 2800, pps: 26, watts: 120, heat: 0.75 },
+    { id: 'g5', name: 'RX 580 8GB Nitro+', photo: 'gpu05.jpg', fallback: makeGpuRender('#06b6d4', 2), curr: 'mgc', cost: 13000, pps: 105, watts: 185, heat: 1.0 },
+    { id: 'g6', name: 'GTX 1080 Ti 11GB', photo: 'gpu1.jpg', fallback: makeGpuRender('#f59e0b', 3), curr: 'usd', cost: 1100, pps: 390, watts: 250, heat: 1.4 },
+    { id: 'g7', name: 'RTX 2070 Super', photo: 'gpu07.jpg', fallback: makeGpuRender('#8b5cf6', 2), curr: 'usd', cost: 5200, pps: 1550, watts: 215, heat: 1.5 },
+    { id: 'g8', name: 'RTX 3060 Ti LHR', photo: 'gpu1.jpg', fallback: makeGpuRender('#10b981', 3), curr: 'usd', cost: 22000, pps: 5900, watts: 200, heat: 1.7 },
+    { id: 'g9', name: 'RX 6800 XT Red Devil', photo: 'gpu09.jpg', fallback: makeGpuRender('#dc2626', 3), curr: 'usd', cost: 88000, pps: 20000, watts: 300, heat: 2.1 },
+    { id: 'g10', name: 'RTX 3080 Ti Suprim', photo: 'gpu2.jpg', fallback: makeGpuRender('#f59e0b', 3), curr: 'usd', cost: 350000, pps: 71000, watts: 350, heat: 2.6 },
+    { id: 'g11', name: 'RTX 3090 24GB NVLink', photo: 'gpu2.jpg', fallback: makeGpuRender('#eab308', 3), curr: 'usd', cost: 1300000, pps: 240000, watts: 380, heat: 3.1 },
+    { id: 'g12', name: 'RTX 4080 Super Noctua', photo: 'gpu2.jpg', fallback: makeGpuRender('#d97706', 3), curr: 'usd', cost: 5000000, pps: 840000, watts: 320, heat: 2.9 },
+    { id: 'g13', name: 'RTX 4090 Liquid Matrix', photo: 'gpu2.jpg', fallback: makeGpuRender('#38bdf8', 3), curr: 'usd', cost: 19000000, pps: 3000000, watts: 450, heat: 3.7 },
+    { id: 'g14', name: 'NVIDIA A100 80GB', photo: 'asic.jpg', fallback: makeGpuRender('#10b981', 4), curr: 'usd', cost: 78000000, pps: 11000000, watts: 400, heat: 4.0 },
+    { id: 'g15', name: 'Antminer L7 Scrypt', photo: 'asic.jpg', fallback: makeGpuRender('#f59e0b', 4), curr: 'usd', cost: 310000000, pps: 40000000, watts: 3400, heat: 6.2 },
+    { id: 'g16', name: 'WhatsMiner M50S++', photo: 'asic.jpg', fallback: makeGpuRender('#3b82f6', 4), curr: 'usd', cost: 1200000000, pps: 148000000, watts: 3600, heat: 7.0 },
+    { id: 'g17', name: 'Antminer S21 Hydro', photo: 'asic.jpg', fallback: makeGpuRender('#06b6d4', 4), curr: 'usd', cost: 5000000000, pps: 560000000, watts: 5200, heat: 8.2 },
+    { id: 'g18', name: 'NVIDIA H200 AI Cluster', photo: 'asic.jpg', fallback: makeGpuRender('#a855f7', 4), curr: 'usd', cost: 23000000000, pps: 2300000000, watts: 8500, heat: 11.5 }
 ];
 
 const RIGS_CATALOG = [
-    { id: 'r1', name: 'Домашний каркас', slots: 6, cost: 0 },
-    { id: 'r2', name: 'Алюминиевый риг Pro', slots: 12, cost: 4500, curr: 'mgc' },
-    { id: 'r3', name: 'Двухъярусная стойка', slots: 24, cost: 32000, curr: 'usd' },
-    { id: 'r4', name: 'Серверный шкаф 42U', slots: 36, cost: 250000, curr: 'usd' },
-    { id: 'r5', name: 'Майнинг-контейнер ISO', slots: 60, cost: 2100000, curr: 'usd' }
+    { id: 'r1', name: 'Домашний каркас (6 слотов)', photo: 'rig.jpg', fallback: makeGpuRender('#64748b', 4), slots: 6, cost: 0 },
+    { id: 'r2', name: 'Алюминиевый риг Pro (12 слотов)', photo: 'rig.jpg', fallback: makeGpuRender('#f59e0b', 4), slots: 12, cost: 4500, curr: 'mgc' },
+    { id: 'r3', name: 'Двухъярусная стойка (18 слотов)', photo: 'rig.jpg', fallback: makeGpuRender('#10b981', 4), slots: 18, cost: 32000, curr: 'usd' },
+    { id: 'r4', name: 'Серверный шкаф 42U (24 слота)', photo: 'rig.jpg', fallback: makeGpuRender('#3b82f6', 4), slots: 24, cost: 250000, curr: 'usd' },
+    { id: 'r5', name: 'Майнинг-контейнер ISO (36 слотов)', photo: 'rig.jpg', fallback: makeGpuRender('#a855f7', 4), slots: 36, cost: 2100000, curr: 'usd' }
 ];
 
 const OC_CATALOG = [
@@ -316,20 +443,12 @@ const INFRA_CATALOG = [
     { id: 'i4', name: 'Иммерсионная ванна', desc: 'Отвод тепла +20 ед/с', val: 20, cost: 12000, curr: 'usd', type: 'cool' }
 ];
 
-let state = JSON.parse(localStorage.getItem('cryptoTycoonAAA_v2')) || {
-    mgc: 0,
-    usd: 0,
-    clickPower: 1,
-    maxWatts: 600,
-    cooling: 1.5,
-    temp: 35,
-    activeRig: 'r1',
-    ownedRigs: { r1: 1 },
-    owned: {},
-    rate: 0.50
+let state = JSON.parse(localStorage.getItem('cryptoRealRigV4')) || {
+    mgc: 0, usd: 0, clickPower: 1, maxWatts: 600, cooling: 1.5, temp: 35,
+    activeRig: 'r1', ownedRigs: { r1: 1 }, owned: {}, rate: 0.50
 };
 
-function save() { localStorage.setItem('cryptoTycoonAAA_v2', JSON.stringify(state)); }
+function save() { localStorage.setItem('cryptoRealRigV4', JSON.stringify(state)); }
 
 function fmt(n) {
     if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
@@ -366,7 +485,6 @@ function getActualPPS() {
     return state.temp >= 90 ? raw * 0.5 : raw;
 }
 
-// Навигация по вкладкам
 document.querySelectorAll('.tab-b').forEach(b => {
     b.addEventListener('click', () => {
         document.querySelectorAll('.tab-b').forEach(x => x.classList.remove('active'));
@@ -376,7 +494,6 @@ document.querySelectorAll('.tab-b').forEach(b => {
     });
 });
 
-// Клик по ригу на главном экране
 const viewport = document.getElementById('rigViewport');
 viewport.addEventListener('click', (e) => {
     state.mgc += state.clickPower;
@@ -387,8 +504,8 @@ viewport.addEventListener('click', (e) => {
     const pop = document.createElement('div');
     pop.className = 'float-num';
     pop.textContent = '+' + fmt(state.clickPower);
-    pop.style.left = (e.clientX - rect.left - 15) + 'px';
-    pop.style.top = (e.clientY - rect.top - 10) + 'px';
+    pop.style.left = (e.clientX - rect.left - 18) + 'px';
+    pop.style.top = (e.clientY - rect.top - 12) + 'px';
     viewport.appendChild(pop);
     setTimeout(() => pop.remove(), 600);
 
@@ -407,20 +524,12 @@ window.buyItem = function(type, id) {
         const rig = RIGS_CATALOG.find(r => r.id === id);
         if (state.ownedRigs[id]) {
             state.activeRig = id;
-            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            save();
-            renderAll();
-            updateUI();
-            return;
+            save(); renderAll(); updateUI(); return;
         }
         if (rig.curr === 'mgc' && state.mgc >= rig.cost) {
-            state.mgc -= rig.cost;
-            state.ownedRigs[id] = 1;
-            state.activeRig = id;
+            state.mgc -= rig.cost; state.ownedRigs[id] = 1; state.activeRig = id;
         } else if (rig.curr === 'usd' && state.usd >= rig.cost) {
-            state.usd -= rig.cost;
-            state.ownedRigs[id] = 1;
-            state.activeRig = id;
+            state.usd -= rig.cost; state.ownedRigs[id] = 1; state.activeRig = id;
         } else return;
     } else {
         const list = type === 'gpu' ? GPU_CATALOG : (type === 'oc' ? OC_CATALOG : INFRA_CATALOG);
@@ -432,7 +541,7 @@ window.buyItem = function(type, id) {
 
         if (type === 'gpu') {
             if (getTotalCardsCount() >= getTotalSlots()) {
-                alert('Не хватает слотов в корпусе! Купите новый корпус во вкладке «Корпуса».');
+                alert('Все слоты в корпусе заняты! Купите более вместительный корпус во вкладке «Корпуса».');
                 return;
             }
             if (getUsedWatts() + item.watts > state.maxWatts) {
@@ -454,9 +563,7 @@ window.buyItem = function(type, id) {
     }
 
     if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    save();
-    renderAll();
-    updateUI();
+    save(); renderAll(); updateUI();
 };
 
 window.sellCrypto = function(ratio) {
@@ -465,103 +572,42 @@ window.sellCrypto = function(ratio) {
     state.mgc -= amount;
     state.usd += amount * state.rate;
     if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    save();
-    updateUI();
+    save(); updateUI();
 };
 
-// Отрисовка индустриального рига в реальном времени через Canvas
-const canvas = document.getElementById('rigCanvas');
-const ctx = canvas.getContext('2d');
-let fanAngle = 0;
+// Отрисовка установленных видеокарт прямо в PCIe-слотах корпуса
+function renderChassisSlots() {
+    const grid = document.getElementById('pcieSlotsGrid');
+    const maxSlots = getTotalSlots();
+    const cols = maxSlots <= 6 ? 6 : (maxSlots <= 12 ? 6 : 9);
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
-function drawRigScene() {
-    const w = canvas.width = viewport.clientWidth;
-    const h = canvas.height = viewport.clientHeight;
-    ctx.clearRect(0, 0, w, h);
-
-    // Фоновая индустриальная стена
-    ctx.fillStyle = '#060a12';
-    ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 1;
-    for (let y = 0; y < h; y += 20) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-    }
-
-    // Металлический каркас рига
-    const rigX = 18, rigY = 16, rigW = w - 36, rigH = h - 65;
-    ctx.fillStyle = '#0e1626';
-    ctx.fillRect(rigX, rigY, rigW, rigH);
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(rigX, rigY, rigW, rigH);
-
-    // Полки крепления
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(rigX, rigY + 42, rigW, 3);
-    ctx.fillRect(rigX, rigY + 105, rigW, 3);
-
-    // Сбор всех купленных видеокарт для отрисовки в слотах
-    let activeCards = [];
-    [...GPU_CATALOG].reverse().forEach(g => {
+    let installedList = [];
+    GPU_CATALOG.forEach(g => {
         const cnt = state.owned[g.id] || 0;
-        for (let i = 0; i < cnt; i++) activeCards.push(g);
+        for (let i = 0; i < cnt; i++) installedList.push(g);
     });
 
-    const activeRig = RIGS_CATALOG.find(r => r.id === state.activeRig);
-    const maxSlots = activeRig ? activeRig.slots : 6;
-    const cols = maxSlots <= 6 ? 6 : (maxSlots <= 12 ? 6 : 8);
-    const slotW = (rigW - 16 - (cols - 1) * 4) / cols;
-    const slotH = 50;
-
+    let html = '';
     for (let i = 0; i < maxSlots; i++) {
-        const rIdx = Math.floor(i / cols);
-        const cIdx = i % cols;
-        const sx = rigX + 8 + cIdx * (slotW + 4);
-        const sy = rigY + 12 + rIdx * 60;
-
-        if (activeCards[i]) {
-            // Отрисовка установленной видеокарты
-            ctx.fillStyle = '#172033';
-            ctx.fillRect(sx, sy, slotW, slotH);
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(sx, sy, slotW, slotH);
-
-            // Мини-кулер с анимацией вращения
-            const fx = sx + slotW / 2;
-            const fy = sy + slotH / 2;
-            const radius = Math.min(12, slotW / 3);
-            ctx.beginPath(); ctx.arc(fx, fy, radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#090e18'; ctx.fill();
-            ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1.5; ctx.stroke();
-
-            // Лопасти кулера
-            ctx.strokeStyle = '#38bdf8';
-            for (let b = 0; b < 3; b++) {
-                const ang = fanAngle + (b * Math.PI * 2) / 3;
-                ctx.beginPath(); ctx.moveTo(fx, fy);
-                ctx.lineTo(fx + Math.cos(ang) * radius, fy + Math.sin(ang) * radius);
-                ctx.stroke();
-            }
+        const card = installedList[i];
+        if (card) {
+            html += `<div class="pcie-slot installed">
+                <div class="pcie-power-cable"></div>
+                <img src="${card.photo}" onerror="this.onerror=null;this.src='${card.fallback}'">
+                <div class="pcie-label">${card.name.split(' ')[0]} ${card.name.split(' ')[1] || ''}</div>
+                <div class="pcie-led"></div>
+            </div>`;
         } else {
-            // Пустой слот
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
-            ctx.fillRect(sx, sy, slotW, slotH);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([2, 2]);
-            ctx.strokeRect(sx, sy, slotW, slotH);
-            ctx.setLineDash([]);
+            html += `<div class="pcie-slot"><span style="font-size:8px;color:#334155;font-weight:700">PCIe</span></div>`;
         }
     }
-
-    fanAngle += 0.15 + (activeCards.length * 0.01);
-    requestAnimationFrame(drawRigScene);
+    grid.innerHTML = html;
 }
 
 function renderAll() {
-    // Рендер каталога видеокарт
+    renderChassisSlots();
+
     document.getElementById('pane-gpus').innerHTML = GPU_CATALOG.map(g => {
         const cnt = state.owned[g.id] || 0;
         const p = getPrice(g);
@@ -569,14 +615,14 @@ function renderAll() {
         const noSlots = getTotalCardsCount() >= getTotalSlots();
         const noWatt = getUsedWatts() + g.watts > state.maxWatts;
         return `<div class="item-card">
-            <div class="item-icon-box">${g.icon}</div>
+            <img class="item-photo" src="${g.photo}" onerror="this.onerror=null;this.src='${g.fallback}'">
             <div class="item-info">
                 <div class="item-title-row">
                     <div class="item-name">${g.name}</div>
                     <span class="badge">x${cnt}</span>
                 </div>
                 <div class="item-specs">+${fmt(g.pps)} MGC/с • ${g.watts}W</div>
-                ${noSlots ? '<div class="item-warn">Нет слотов в корпусе!</div>' : (noWatt ? '<div class="item-warn">Не хватает мощности БП!</div>' : '')}
+                ${noSlots ? '<div class="item-warn">Нет свободных слотов в корпусе!</div>' : (noWatt ? '<div class="item-warn">Не хватает мощности БП!</div>' : '')}
             </div>
             <button class="buy-btn ${g.curr === 'usd' ? 'usd' : ''}" ${!canAfford || noSlots || noWatt ? 'disabled' : ''} onclick="buyItem('gpu','${g.id}')">
                 ${g.curr === 'usd' ? '$' : ''}${fmt(p)} ${g.curr === 'mgc' ? 'MGC' : ''}
@@ -584,17 +630,16 @@ function renderAll() {
         </div>`;
     }).join('');
 
-    // Рендер каталога корпусов
     document.getElementById('pane-rigs').innerHTML = RIGS_CATALOG.map(r => {
         const owned = !!state.ownedRigs[r.id];
         const active = state.activeRig === r.id;
         return `<div class="item-card">
-            <div class="item-icon-box">🏢</div>
+            <img class="item-photo" src="${r.photo}" onerror="this.onerror=null;this.src='${r.fallback}'">
             <div class="item-info">
                 <div class="item-title-row">
                     <div class="item-name">${r.name}</div>
                 </div>
-                <div class="item-specs">Вместимость: ${r.slots} слотов для карт</div>
+                <div class="item-specs">Слотов для видеокарт: ${r.slots} шт.</div>
             </div>
             <button class="buy-btn ${r.curr === 'usd' ? 'usd' : ''}" ${active ? 'disabled' : ''} onclick="buyItem('rig','${r.id}')">
                 ${active ? 'Активен' : (owned ? 'Выбрать' : (r.curr === 'usd' ? '$' : '') + fmt(r.cost) + (r.curr === 'mgc' ? ' MGC' : ''))}
@@ -602,13 +647,11 @@ function renderAll() {
         </div>`;
     }).join('');
 
-    // Рендер разгона
     document.getElementById('pane-oc').innerHTML = OC_CATALOG.map(o => {
         const cnt = state.owned[o.id] || 0;
         const p = getPrice(o);
         const can = o.curr === 'mgc' ? state.mgc >= p : state.usd >= p;
         return `<div class="item-card">
-            <div class="item-icon-box">⚡</div>
             <div class="item-info">
                 <div class="item-title-row">
                     <div class="item-name">${o.name}</div>
@@ -622,13 +665,11 @@ function renderAll() {
         </div>`;
     }).join('');
 
-    // Рендер питания/охлаждения
     document.getElementById('pane-infra').innerHTML = INFRA_CATALOG.map(i => {
         const cnt = state.owned[i.id] || 0;
         const p = getPrice(i);
         const can = i.curr === 'mgc' ? state.mgc >= p : state.usd >= p;
         return `<div class="item-card">
-            <div class="item-icon-box">🔌</div>
             <div class="item-info">
                 <div class="item-title-row">
                     <div class="item-name">${i.name}</div>
@@ -637,7 +678,7 @@ function renderAll() {
                 <div class="item-specs">${i.desc}</div>
             </div>
             <button class="buy-btn ${i.curr === 'usd' ? 'usd' : ''}" ${!can ? 'disabled' : ''} onclick="buyItem('infra','${i.id}')">
-                ${o.curr === 'usd' ? '$' : ''}${fmt(p)} ${i.curr === 'mgc' ? 'MGC' : ''}
+                ${i.curr === 'usd' ? '$' : ''}${fmt(p)} ${i.curr === 'mgc' ? 'MGC' : ''}
             </button>
         </div>`;
     }).join('');
@@ -650,7 +691,7 @@ function updateUI() {
 
     document.getElementById('mgcVal').textContent = fmt(state.mgc);
     document.getElementById('usdVal').textContent = '$' + fmt(state.usd);
-    document.getElementById('hashVal').textContent = fmt(pps * 14.5) + ' MH/s';
+    document.getElementById('hashVal').textContent = fmt(pps * 15.2) + ' MH/s';
     document.getElementById('rateBox').textContent = '$' + state.rate.toFixed(3);
 
     document.getElementById('wText').textContent = `${fmt(usedW)}/${fmt(state.maxWatts)}W`;
@@ -664,27 +705,23 @@ function updateUI() {
     tFill.style.background = state.temp >= 90 ? '#ef4444' : (state.temp >= 70 ? '#f59e0b' : '#3b82f6');
 }
 
-// Игровой цикл (каждую секунду)
 setInterval(() => {
     const pps = getActualPPS();
     const heatSum = GPU_CATALOG.reduce((s, g) => s + g.heat * (state.owned[g.id] || 0), 0);
     if (pps > 0) {
         state.mgc += pps;
-        state.temp = Math.min(105, Math.max(32, state.temp + heatSum * 0.18 - state.cooling * 0.35));
+        state.temp = Math.min(105, Math.max(32, state.temp + heatSum * 0.16 - state.cooling * 0.35));
     } else {
         state.temp = Math.max(32, state.temp - 0.5);
     }
 
     state.rate = Math.max(0.2, Math.min(2.5, state.rate + (Math.random() - 0.49) * 0.03));
 
-    save();
-    updateUI();
-    renderAll();
+    save(); updateUI();
 }, 1000);
 
 renderAll();
 updateUI();
-drawRigScene();
 </script>
 </body>
 </html>
