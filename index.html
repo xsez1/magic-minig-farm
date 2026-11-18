@@ -3,644 +3,776 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mining Rig Tycoon</title>
+    <title>CRYPTO EMPIRE // RIG TYCOON</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+        :root {
+            --bg: #090a0d;
+            --surface: #12151c;
+            --surface-2: #191d26;
+            --border: rgba(255, 255, 255, 0.08);
+            --gold: #f59e0b;
+            --gold-dim: rgba(245, 158, 11, 0.15);
+            --green: #10b981;
+            --blue: #3b82f6;
+            --red: #ef4444;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
         }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0;
-            padding: 0;
-            background: #12100e;
-            color: #e6e1d6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
             user-select: none;
             overflow-x: hidden;
         }
         .app {
-            max-width: 430px;
+            max-width: 440px;
             margin: 0 auto;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background: radial-gradient(circle at 50% 20%, #26211c 0%, #110f0d 80%);
+            background: linear-gradient(180deg, #0d1017 0%, #090a0d 100%);
         }
 
-        /* Верхняя панель телеметрии */
-        .hud {
+        /* Верхний статус-бар */
+        .top-bar {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
             padding: 10px 12px;
-            background: rgba(15, 13, 11, 0.9);
-            border-bottom: 1px solid #332c25;
+            background: rgba(18, 21, 28, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 20;
         }
-        .hud-box {
-            background: #1a1714;
-            border: 1px solid #383028;
-            border-radius: 6px;
-            padding: 6px 10px;
+        .stat-pill {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px 8px;
         }
-        .hud-label {
-            font-size: 10px;
+        .stat-lbl {
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #8c8275;
+            letter-spacing: 0.7px;
+            color: var(--muted);
+            font-weight: 600;
         }
-        .hud-val {
-            font-size: 16px;
-            font-weight: 700;
-            color: #ff9900;
+        .stat-num {
+            font-size: 13px;
+            font-weight: 800;
             margin-top: 2px;
-        }
-        .hud-sub {
-            font-size: 11px;
-            color: #a89f91;
-        }
-
-        /* Полоски температуры и энергии */
-        .bars {
-            display: flex;
-            gap: 8px;
-            padding: 0 12px 8px;
-            background: rgba(15, 13, 11, 0.9);
-            border-bottom: 1px solid #332c25;
-        }
-        .bar-wrap {
-            flex: 1;
-        }
-        .bar-head {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            margin-bottom: 3px;
-            color: #b5aba0;
-        }
-        .bar-track {
-            height: 6px;
-            background: #24201c;
-            border-radius: 3px;
+            white-space: nowrap;
             overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .bar-fill {
-            height: 100%;
-            transition: width 0.2s, background-color 0.3s;
-        }
+        .c-gold { color: var(--gold); }
+        .c-green { color: var(--green); }
+        .c-blue { color: var(--blue); }
 
-        /* Сцена рабочего места (Canvas) */
-        .rig-stage {
+        /* Сцена корпуса рига с фото */
+        .rig-viewport {
             position: relative;
             width: 100%;
-            height: 235px;
+            height: 230px;
+            background: #0b0d12 url('rig.jpg') center/cover no-repeat;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
             cursor: pointer;
-            border-bottom: 2px solid #3d342b;
-            background: #171412;
         }
-        canvas {
-            display: block;
+        .rig-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(9,10,13,0.35) 0%, rgba(9,10,13,0.15) 50%, rgba(9,10,13,0.88) 100%);
+            pointer-events: none;
+        }
+
+        /* Сетка установленных видеокарт внутри фото-корпуса */
+        .installed-grid {
+            position: absolute;
+            top: 28px;
+            left: 16px;
+            right: 16px;
+            height: 118px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 6px;
+            pointer-events: none;
+        }
+        .slot-card {
+            background: rgba(15, 18, 25, 0.85);
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+            animation: popIn 0.25s ease;
+        }
+        .slot-card img {
             width: 100%;
             height: 100%;
+            object-fit: cover;
+            opacity: 0.9;
         }
-        .cool-btn {
+        .slot-led {
             position: absolute;
+            bottom: 3px;
+            right: 3px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+            animation: pulse 1.2s infinite alternate;
+        }
+        @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+        /* Телеметрия поверх рига снизу */
+        .rig-footer {
+            position: absolute;
+            bottom: 10px;
+            left: 12px;
             right: 12px;
-            bottom: 12px;
-            background: #1f2933;
-            border: 1px solid #3b82f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        .meters {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .meter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-shadow: 0 1px 3px #000;
+        }
+        .meter-track {
+            flex: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.14);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .meter-fill { height: 100%; transition: width 0.25s, background 0.25s; }
+        .fan-boost-btn {
+            background: rgba(37, 99, 235, 0.25);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(96, 165, 250, 0.5);
             color: #93c5fd;
             font-size: 11px;
             font-weight: 700;
-            padding: 6px 10px;
-            border-radius: 5px;
+            padding: 8px 11px;
+            border-radius: 8px;
             cursor: pointer;
         }
-        .cool-btn:active {
-            background: #2563eb;
-            color: #fff;
-        }
+        .fan-boost-btn:active { background: #2563eb; color: #fff; }
 
-        /* Вкладки навигации */
-        .nav {
+        /* Навигация 5 вкладок */
+        .tabs {
             display: flex;
-            background: #161310;
-            border-bottom: 1px solid #332c25;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
         }
-        .nav-btn {
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
             flex: 1;
-            padding: 11px 4px;
+            min-width: 76px;
+            padding: 12px 4px;
             background: none;
             border: none;
             border-bottom: 2px solid transparent;
-            color: #8c8275;
-            font-size: 12px;
+            color: var(--muted);
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
+            transition: 0.2s;
         }
-        .nav-btn.active {
-            color: #ff9900;
-            border-bottom-color: #ff9900;
-            background: rgba(255, 153, 0, 0.06);
+        .tab-btn.active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+            background: var(--gold-dim);
         }
 
-        /* Список улучшений */
-        .content {
+        /* Контейнер карточек */
+        .main-scroll {
             flex: 1;
-            padding: 10px 12px 24px;
-            overflow-y: auto;
+            padding: 12px;
+            padding-bottom: 30px;
         }
-        .tab-pane {
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .tab-pane.active {
+        .pane { display: none; flex-direction: column; gap: 10px; }
+        .pane.active { display: flex; }
+
+        /* Премиальная карточка товара с фото */
+        .item-card {
             display: flex;
-        }
-        .card {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: #1c1815;
-            border: 1px solid #332c25;
-            border-radius: 6px;
-            padding: 10px 12px;
+            gap: 11px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            transition: border-color 0.2s;
         }
-        .card-info {
-            flex: 1;
-            padding-right: 10px;
+        .item-card.locked { opacity: 0.55; }
+        .item-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 9px;
+            background: #1c212c;
+            border: 1px solid var(--border);
+            object-fit: cover;
+            flex-shrink: 0;
         }
-        .card-title {
-            font-size: 14px;
+        .item-body { flex: 1; min-width: 0; }
+        .item-top {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .item-name {
+            font-size: 13px;
             font-weight: 700;
-            color: #f0ece1;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .card-desc {
-            font-size: 11px;
-            color: #968c7e;
-            margin-top: 3px;
-        }
-        .card-meta {
+        .badge {
             font-size: 10px;
-            color: #ff9900;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 5px;
+            background: var(--surface-2);
+            color: var(--gold);
+            border: 1px solid rgba(245,158,11,0.3);
+        }
+        .item-specs {
+            font-size: 11px;
+            color: var(--muted);
             margin-top: 3px;
         }
-        .buy-btn {
-            background: #d97706;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 12px;
-            font-size: 12px;
-            font-weight: 700;
-            min-width: 82px;
-            cursor: pointer;
+        .item-warn {
+            font-size: 10px;
+            color: var(--red);
+            margin-top: 2px;
+            font-weight: 600;
         }
-        .buy-btn:disabled {
-            background: #2b2520;
-            color: #635b52;
+        .buy-cta {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #090a0d;
+            border: none;
+            border-radius: 9px;
+            padding: 9px 11px;
+            font-size: 11px;
+            font-weight: 800;
+            min-width: 84px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .buy-cta.usd {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+        }
+        .buy-cta:disabled {
+            background: var(--surface-2);
+            color: #525866;
             cursor: not-allowed;
         }
 
-        .float-num {
-            position: absolute;
-            color: #ffb703;
-            font-weight: 800;
-            font-size: 16px;
-            pointer-events: none;
-            text-shadow: 0 2px 4px #000;
-            animation: rise 0.65s ease-out forwards;
+        /* Биржа */
+        .exchange-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
         }
-        @keyframes rise {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-45px); }
+        .rate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        .chart-canvas {
+            width: 100%;
+            height: 110px;
+            background: #0b0d12;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+        .sell-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* Престиж */
+        .prestige-card {
+            background: radial-gradient(circle at top right, rgba(245,158,11,0.18), var(--surface) 70%);
+            border: 1px solid rgba(245,158,11,0.35);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .tap-pop {
+            position: absolute;
+            font-weight: 900;
+            font-size: 15px;
+            color: #fbbf24;
+            text-shadow: 0 2px 6px #000;
+            pointer-events: none;
+            animation: floatUp 0.6s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-48px) scale(1.15); }
         }
     </style>
 </head>
 <body>
 <div class="app">
-    <div class="hud">
-        <div class="hud-box">
-            <div class="hud-label">Баланс фермы</div>
-            <div class="hud-val" id="balVal">0.00 COIN</div>
-            <div class="hud-sub">Хешрейт: <span id="hashVal">0</span> MH/s</div>
+    <div class="top-bar">
+        <div class="stat-pill">
+            <div class="stat-lbl">Крипто (MGC)</div>
+            <div class="stat-num c-gold" id="mgcBal">0.00</div>
         </div>
-        <div class="hud-box">
-            <div class="hud-label">Доходность</div>
-            <div class="hud-val" id="ppsVal">+0.0 / сек</div>
-            <div class="hud-sub">За клик: +<span id="ppcVal">1.0</span></div>
+        <div class="stat-pill">
+            <div class="stat-lbl">Капитал ($)</div>
+            <div class="stat-num c-green" id="usdBal">$0.00</div>
         </div>
-    </div>
-
-    <div class="bars">
-        <div class="bar-wrap">
-            <div class="bar-head"><span>Питание БП</span><span id="wattText">0 / 450W</span></div>
-            <div class="bar-track"><div class="bar-fill" id="wattBar" style="width:0%; background:#22c55e;"></div></div>
-        </div>
-        <div class="bar-wrap">
-            <div class="bar-head"><span>Температура</span><span id="tempText">38°C</span></div>
-            <div class="bar-track"><div class="bar-fill" id="tempBar" style="width:38%; background:#3b82f6;"></div></div>
+        <div class="stat-pill">
+            <div class="stat-lbl">Хешрейт</div>
+            <div class="stat-num c-blue" id="hashRate">0 MH/s</div>
         </div>
     </div>
 
-    <div class="rig-stage" id="stage">
-        <canvas id="rigCanvas"></canvas>
-        <button class="cool-btn" id="coolBtn">Продуть кулеры (-12°C)</button>
+    <div class="rig-viewport" id="rigTap">
+        <div class="installed-grid" id="rigSlots"></div>
+        <div class="rig-overlay"></div>
+        <div class="rig-footer">
+            <div class="meters">
+                <div class="meter-row">
+                    <span style="width:52px">БП: <span id="wPct">0%</span></span>
+                    <div class="meter-track"><div class="meter-fill" id="wFill" style="width:0%;background:#10b981"></div></div>
+                    <span id="wLabel">0/600W</span>
+                </div>
+                <div class="meter-row">
+                    <span style="width:52px">T°: <span id="tVal">35°C</span></span>
+                    <div class="meter-track"><div class="meter-fill" id="tFill" style="width:35%;background:#3b82f6"></div></div>
+                    <span id="multLabel">x1.00</span>
+                </div>
+            </div>
+            <button class="fan-boost-btn" id="coolBtn">Охладить -15°</button>
+        </div>
     </div>
 
-    <div class="nav">
-        <button class="nav-btn active" data-tab="gpus">Видеокарты</button>
-        <button class="nav-btn" data-tab="oc">Разгон</button>
-        <button class="nav-btn" data-tab="infra">Питание/Охлад</button>
-        <button class="nav-btn" data-tab="pool">Пул / Задачи</button>
+    <div class="tabs">
+        <button class="tab-btn active" data-t="gpus">Видеокарты</button>
+        <button class="tab-btn" data-t="oc">Разгон</button>
+        <button class="tab-btn" data-t="infra">Питание</button>
+        <button class="tab-btn" data-t="market">Биржа</button>
+        <button class="tab-btn" data-t="prestige">Империя</button>
     </div>
 
-    <div class="content">
-        <div class="tab-pane active" id="tab-gpus"></div>
-        <div class="tab-pane" id="tab-oc"></div>
-        <div class="tab-pane" id="tab-infra"></div>
-        <div class="tab-pane" id="tab-pool"></div>
+    <div class="main-scroll">
+        <div class="pane active" id="pane-gpus"></div>
+        <div class="pane" id="pane-oc"></div>
+        <div class="pane" id="pane-infra"></div>
+        <div class="pane" id="pane-market">
+            <div class="exchange-box">
+                <div class="rate-header">
+                    <div>
+                        <div class="stat-lbl">Курс MGC / USD</div>
+                        <div style="font-size:20px;font-weight:800;color:var(--green)" id="rateDisplay">$0.50</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div class="stat-lbl">Доход фермы</div>
+                        <div style="font-size:13px;font-weight:700;color:var(--gold)" id="ppsDisplay">0.00 MGC/с</div>
+                    </div>
+                </div>
+                <canvas id="rateChart" class="chart-canvas"></canvas>
+                <div class="sell-grid">
+                    <button class="buy-cta usd" onclick="sellMGC(0.5)">Продать 50% MGC</button>
+                    <button class="buy-cta usd" onclick="sellMGC(1)">Продать ВСЁ (100%)</button>
+                </div>
+            </div>
+        </div>
+        <div class="pane" id="pane-prestige">
+            <div class="prestige-card">
+                <div class="stat-lbl">Уровень дата-центра</div>
+                <h2 style="margin:6px 0;color:var(--gold)" id="dcLevel">Гаражный риг (x1.0)</h2>
+                <p style="font-size:12px;color:var(--muted);line-height:1.45">
+                    Построй промышленный крипто-дата-центр. Сбрасывает текущие карты и баланс, но навсегда увеличивает доходность всех будущих сборок в <b>2.5 раза</b>.
+                </p>
+                <div style="margin:14px 0;font-size:13px;font-weight:700">
+                    Требуется капитал: <span class="c-green" id="prestigeReq">$250,000</span>
+                </div>
+                <button class="buy-cta" style="width:100%;padding:12px" id="prestigeBtn" onclick="doPrestige()">Построить Дата-Центр</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    const tg = window.Telegram?.WebApp;
-    if (tg) tg.expand();
+const tg = window.Telegram?.WebApp;
+if (tg) tg.expand();
 
-    const defaultState = {
-        balance: 0,
-        clickPower: 1,
-        temp: 38,
-        maxWatts: 450,
-        cooling: 1,
-        totalClicks: 0,
-        gpus: [
-            { id: 'g1', name: 'GTX 1060 6GB', pps: 1.5, watts: 120, heat: 0.4, cost: 20, count: 0, color: '#22c55e' },
-            { id: 'g2', name: 'RX 580 8GB Nitro+', pps: 6, watts: 185, heat: 0.8, cost: 110, count: 0, color: '#3b82f6' },
-            { id: 'g3', name: 'RTX 3060 Ti', pps: 24, watts: 200, heat: 1.1, cost: 580, count: 0, color: '#a855f7' },
-            { id: 'g4', name: 'RTX 3080 Suprim', pps: 95, watts: 320, heat: 1.8, cost: 2800, count: 0, color: '#f59e0b' },
-            { id: 'g5', name: 'RTX 4090 Strix', pps: 420, watts: 450, heat: 2.5, cost: 14500, count: 0, color: '#ef4444' },
-            { id: 'g6', name: 'ASIC Antminer S21', pps: 1900, watts: 1100, heat: 4.5, cost: 72000, count: 0, color: '#06b6d4' }
-        ],
-        oc: [
-            { id: 'o1', name: 'Андервольтинг ядра', desc: '+1.5 к мощи клика', ppc: 1.5, cost: 30, count: 0 },
-            { id: 'o2', name: 'Прошивка таймингов BIOS', desc: '+7 к мощи клика', ppc: 7, cost: 220, count: 0 },
-            { id: 'o3', name: 'Жидкий металл на чип', desc: '+35 к мощи клика', ppc: 35, cost: 1400, count: 0 },
-            { id: 'o4', name: 'Кастомный скрипт майнера', desc: '+160 к мощи клика', ppc: 160, cost: 8500, count: 0 }
-        ],
-        infra: [
-            { id: 'i1', name: 'Блок питания +500W', desc: 'Увеличивает лимит мощности фермы', type: 'watt', val: 500, cost: 80, count: 0 },
-            { id: 'i2', name: 'Серверный БП +1800W', desc: 'Для крупных ригов на 6-12 карт', type: 'watt', val: 1800, cost: 950, count: 0 },
-            { id: 'i3', name: 'Стойка кулеров Delta', desc: 'Снижает нагрев на 2 единицы/сек', type: 'cool', val: 2, cost: 150, count: 0 },
-            { id: 'i4', name: 'Контур водяного охлаждения', desc: 'Мощный отвод тепла (-7/сек)', type: 'cool', val: 7, cost: 1800, count: 0 }
-        ],
-        quests: [
-            { id: 'q1', name: 'Первый запуск', desc: 'Сделать 50 кликов по ригу', target: 50, type: 'clicks', reward: 60, claimed: false },
-            { id: 'q2', name: 'Домашний майнер', desc: 'Купить 3 любые видеокарты', target: 3, type: 'gpus', reward: 250, claimed: false },
-            { id: 'q3', name: 'Промышленный масштаб', desc: 'Достичь дохода 100 COIN/сек', target: 100, type: 'pps', reward: 1500, claimed: false },
-            { id: 'q4', name: 'Крипто-барон', desc: 'Собрать 10 видеокарт в стойке', target: 10, type: 'gpus', reward: 8000, claimed: false }
-        ]
-    };
+// 18 уровней оборудования для долгой и глубокой прогрессии
+const GPU_CATALOG = [
+    { id: 'g01', name: 'GTX 750 Ti 2GB', img: 'gpu1.jpg', curr: 'mgc', cost: 25, pps: 0.4, watts: 60, heat: 0.25 },
+    { id: 'g02', name: 'GTX 1050 Ti 4GB', img: 'gpu1.jpg', curr: 'mgc', cost: 140, pps: 1.8, watts: 75, heat: 0.4 },
+    { id: 'g03', name: 'RX 470 4GB Mining', img: 'gpu1.jpg', curr: 'mgc', cost: 680, pps: 7.5, watts: 130, heat: 0.7 },
+    { id: 'g04', name: 'GTX 1060 6GB Dual', img: 'gpu1.jpg', curr: 'mgc', cost: 3100, pps: 28, watts: 120, heat: 0.8 },
+    { id: 'g05', name: 'RX 580 8GB Nitro+', img: 'gpu1.jpg', curr: 'mgc', cost: 14500, pps: 110, watts: 185, heat: 1.1 },
+    { id: 'g06', name: 'GTX 1080 Ti 11GB', img: 'gpu1.jpg', curr: 'usd', cost: 1200, pps: 420, watts: 250, heat: 1.5 },
+    { id: 'g07', name: 'RTX 2070 Super', img: 'gpu1.jpg', curr: 'usd', cost: 5800, pps: 1650, watts: 215, heat: 1.6 },
+    { id: 'g08', name: 'RTX 3060 Ti LHR-Unlock', img: 'gpu1.jpg', curr: 'usd', cost: 24000, pps: 6200, watts: 200, heat: 1.8 },
+    { id: 'g09', name: 'RX 6800 XT Red Devil', img: 'gpu2.jpg', curr: 'usd', cost: 95000, pps: 21000, watts: 300, heat: 2.2 },
+    { id: 'g10', name: 'RTX 3080 Ti Suprim X', img: 'gpu2.jpg', curr: 'usd', cost: 380000, pps: 74000, watts: 350, heat: 2.7 },
+    { id: 'g11', name: 'RTX 3090 24GB NVLink', img: 'gpu2.jpg', curr: 'usd', cost: 1450000, pps: 250000, watts: 380, heat: 3.2 },
+    { id: 'g12', name: 'RTX 4080 Super Noctua', img: 'gpu2.jpg', curr: 'usd', cost: 5500000, pps: 880000, watts: 320, heat: 3.0 },
+    { id: 'g13', name: 'RTX 4090 Liquid Matrix', img: 'gpu2.jpg', curr: 'usd', cost: 21000000, pps: 3100000, watts: 450, heat: 3.8 },
+    { id: 'g14', name: 'NVIDIA A100 80GB PCIe', img: 'asic.jpg', curr: 'usd', cost: 85000000, pps: 11500000, watts: 400, heat: 4.2 },
+    { id: 'g15', name: 'Antminer L7 Scrypt', img: 'asic.jpg', curr: 'usd', cost: 340000000, pps: 42000000, watts: 3400, heat: 6.5 },
+    { id: 'g16', name: 'WhatsMiner M50S++', img: 'asic.jpg', curr: 'usd', cost: 1350000000, pps: 155000000, watts: 3600, heat: 7.2 },
+    { id: 'g17', name: 'Antminer S21 Hydro', img: 'asic.jpg', curr: 'usd', cost: 5500000000, pps: 590000000, watts: 5200, heat: 8.5 },
+    { id: 'g18', name: 'NVIDIA H200 AI Cluster', img: 'asic.jpg', curr: 'usd', cost: 25000000000, pps: 2400000000, watts: 8500, heat: 12.0 }
+];
 
-    let state = JSON.parse(localStorage.getItem('rigTycoonV2')) || defaultState;
+const OC_CATALOG = [
+    { id: 'o1', name: 'Термопаста MX-4', desc: '+0.5 MGC за клик', curr: 'mgc', cost: 30, ppc: 0.5 },
+    { id: 'o2', name: 'Прошивка таймингов памяти', desc: '+2.5 MGC за клик', curr: 'mgc', cost: 220, ppc: 2.5 },
+    { id: 'o3', name: 'Скрипт авто-переключения пулов', desc: '+12 MGC за клик', curr: 'mgc', cost: 1500, ppc: 12 },
+    { id: 'o4', name: 'Вольтмод цепи питания', desc: '+65 MGC за клик', curr: 'usd', cost: 800, ppc: 65 },
+    { id: 'o5', name: 'Жидкий металл Thermal Grizzly', desc: '+350 MGC за клик', curr: 'usd', cost: 6500, ppc: 350 },
+    { id: 'o6', name: 'Кастомное ядро Linux HiveOS', desc: '+1,800 MGC за клик', curr: 'usd', cost: 48000, ppc: 1800 },
+    { id: 'o7', name: 'Квантовый алгоритм хеширования', desc: '+12,000 MGC за клик', curr: 'usd', cost: 420000, ppc: 12000 }
+];
 
-    function save() {
-        localStorage.setItem('rigTycoonV2', JSON.stringify(state));
-    }
+const INFRA_CATALOG = [
+    { id: 'i1', name: 'Блок питания 750W Bronze', desc: '+750W к лимиту мощности', type: 'watt', val: 750, curr: 'mgc', cost: 90 },
+    { id: 'i2', name: 'Серверный БП HP 1200W Platinum', desc: '+1200W к лимиту мощности', type: 'watt', val: 1200, curr: 'usd', cost: 350 },
+    { id: 'i3', name: 'Промышленный щиток 15 кВт', desc: '+15000W к лимиту мощности', type: 'watt', val: 15000, curr: 'usd', cost: 14000 },
+    { id: 'i4', name: 'Своя трансформаторная будка', desc: '+150000W к лимиту мощности', type: 'watt', val: 150000, curr: 'usd', cost: 450000 },
+    { id: 'i5', name: 'Кулеры Delta 4000 RPM', desc: 'Отвод тепла +2.5 ед/с', type: 'cool', val: 2.5, curr: 'mgc', cost: 160 },
+    { id: 'i6', name: 'Канальный вентилятор S&P', desc: 'Отвод тепла +9 ед/с', type: 'cool', val: 9, curr: 'usd', cost: 1100 },
+    { id: 'i7', name: 'Иммерсионная ванна охлаждения', desc: 'Отвод тепла +45 ед/с', type: 'cool', val: 45, curr: 'usd', cost: 65000 }
+];
 
-    function getUsedWatts() {
-        return state.gpus.reduce((s, g) => s + g.watts * g.count, 0);
-    }
+let state = JSON.parse(localStorage.getItem('cryptoEmpireV1')) || {
+    mgc: 0,
+    usd: 0,
+    clickPower: 1,
+    maxWatts: 600,
+    cooling: 1.5,
+    temp: 35,
+    prestige: 0,
+    owned: {},
+    rate: 0.52,
+    rateHistory: [0.48, 0.50, 0.49, 0.53, 0.51, 0.54, 0.52, 0.55, 0.51, 0.52]
+};
 
-    function getTotalCards() {
-        return state.gpus.reduce((s, g) => s + g.count, 0);
-    }
+function save() { localStorage.setItem('cryptoEmpireV1', JSON.stringify(state)); }
 
-    function getRawPPS() {
-        return state.gpus.reduce((s, g) => s + g.pps * g.count, 0);
-    }
+function fmt(n) {
+    if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+    return n.toFixed(2);
+}
 
-    function getActualPPS() {
-        const raw = getRawPPS();
-        return state.temp >= 95 ? raw * 0.5 : raw;
-    }
+function getPrice(item) {
+    const cnt = state.owned[item.id] || 0;
+    return Math.floor(item.cost * Math.pow(1.24, cnt));
+}
 
-    function price(item) {
-        return Math.floor(item.cost * Math.pow(1.18, item.count));
-    }
+function getUsedWatts() {
+    return GPU_CATALOG.reduce((s, g) => s + g.watts * (state.owned[g.id] || 0), 0);
+}
 
-    // Вкладки
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-        });
+function getPrestigeMult() {
+    return Math.pow(2.5, state.prestige);
+}
+
+function getRawPPS() {
+    const base = GPU_CATALOG.reduce((s, g) => s + g.pps * (state.owned[g.id] || 0), 0);
+    return base * getPrestigeMult();
+}
+
+function getActualPPS() {
+    const raw = getRawPPS();
+    return state.temp >= 92 ? raw * 0.45 : raw;
+}
+
+// Навигация
+document.querySelectorAll('.tab-btn').forEach(b => {
+    b.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        document.getElementById('pane-' + b.dataset.t).classList.add('active');
+        if (b.dataset.t === 'market') drawChart();
     });
+});
 
-    // Кнопка продувки кулеров
-    document.getElementById('coolBtn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.temp = Math.max(35, state.temp - 12);
-        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        updateHUD();
+// Клик по ригу
+const rigTap = document.getElementById('rigTap');
+rigTap.addEventListener('click', (e) => {
+    const gain = state.clickPower * getPrestigeMult();
+    state.mgc += gain;
+    state.temp = Math.min(105, state.temp + 0.3);
+    if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+    const r = rigTap.getBoundingClientRect();
+    const pop = document.createElement('div');
+    pop.className = 'tap-pop';
+    pop.textContent = '+' + fmt(gain);
+    pop.style.left = (e.clientX - r.left - 18) + 'px';
+    pop.style.top = (e.clientY - r.top - 12) + 'px';
+    rigTap.appendChild(pop);
+    setTimeout(() => pop.remove(), 600);
+
+    updateUI();
+});
+
+document.getElementById('coolBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.temp = Math.max(32, state.temp - 15);
+    if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    updateUI();
+});
+
+window.buyItem = function(type, id) {
+    const list = type === 'gpu' ? GPU_CATALOG : (type === 'oc' ? OC_CATALOG : INFRA_CATALOG);
+    const item = list.find(x => x.id === id);
+    const price = getPrice(item);
+
+    if (item.curr === 'mgc' && state.mgc < price) return;
+    if (item.curr === 'usd' && state.usd < price) return;
+
+    if (type === 'gpu' && getUsedWatts() + item.watts > state.maxWatts) {
+        alert('Не хватает мощности БП! Улучши питание во вкладке «Питание».');
+        return;
+    }
+
+    if (item.curr === 'mgc') state.mgc -= price;
+    else state.usd -= price;
+
+    state.owned[id] = (state.owned[id] || 0) + 1;
+
+    if (type === 'oc') state.clickPower += item.ppc;
+    if (type === 'infra') {
+        if (item.type === 'watt') state.maxWatts += item.val;
+        if (item.type === 'cool') state.cooling += item.val;
+    }
+
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    save();
+    renderAll();
+    updateUI();
+};
+
+window.sellMGC = function(ratio) {
+    const amount = state.mgc * ratio;
+    if (amount <= 0.01) return;
+    state.mgc -= amount;
+    state.usd += amount * state.rate;
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    save();
+    renderAll();
+    updateUI();
+};
+
+window.doPrestige = function() {
+    const req = 250000 * Math.pow(8, state.prestige);
+    if (state.usd < req) return;
+    state.prestige++;
+    state.mgc = 0;
+    state.usd = 0;
+    state.clickPower = 1;
+    state.maxWatts = 600;
+    state.cooling = 1.5;
+    state.temp = 35;
+    state.owned = {};
+    save();
+    renderAll();
+    updateUI();
+};
+
+function renderRigSlots() {
+    const grid = document.getElementById('rigSlots');
+    let cards = [];
+    // Показываем до 12 самых мощных купленных карт прямо в слотах корпуса
+    [...GPU_CATALOG].reverse().forEach(g => {
+        const cnt = state.owned[g.id] || 0;
+        for (let i = 0; i < cnt && cards.length < 12; i++) {
+            cards.push(g);
+        }
     });
+    grid.innerHTML = cards.map(c => `
+        <div class="slot-card">
+            <img src="${c.img}" onerror="this.style.display='none'">
+            <div class="slot-led"></div>
+        </div>
+    `).join('');
+}
 
-    // Клик по сцене
-    const stage = document.getElementById('stage');
-    stage.addEventListener('click', (e) => {
-        state.balance += state.clickPower;
-        state.totalClicks++;
-        state.temp = Math.min(105, state.temp + 0.35);
-        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+function renderAll() {
+    renderRigSlots();
 
-        const rect = stage.getBoundingClientRect();
-        const el = document.createElement('div');
-        el.className = 'float-num';
-        el.textContent = '+' + state.clickPower.toFixed(1);
-        el.style.left = (e.clientX - rect.left - 15) + 'px';
-        el.style.top = (e.clientY - rect.top - 10) + 'px';
-        stage.appendChild(el);
-        setTimeout(() => el.remove(), 650);
+    document.getElementById('pane-gpus').innerHTML = GPU_CATALOG.map(g => {
+        const cnt = state.owned[g.id] || 0;
+        const p = getPrice(g);
+        const canAfford = g.curr === 'mgc' ? state.mgc >= p : state.usd >= p;
+        const noWatt = getUsedWatts() + g.watts > state.maxWatts;
+        return `<div class="item-card">
+            <img class="item-thumb" src="${g.img}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect width=%2256%22 height=%2256%22 fill=%22%231f2430%22/></svg>'">
+            <div class="item-body">
+                <div class="item-top">
+                    <div class="item-name">${g.name}</div>
+                    <span class="badge">x${cnt}</span>
+                </div>
+                <div class="item-specs">+${fmt(g.pps * getPrestigeMult())} MGC/с • ${g.watts}W</div>
+                ${noWatt ? '<div class="item-warn">Недостаточно мощности БП</div>' : ''}
+            </div>
+            <button class="buy-cta ${g.curr === 'usd' ? 'usd' : ''}" ${!canAfford || noWatt ? 'disabled' : ''} onclick="buyItem('gpu','${g.id}')">
+                ${g.curr === 'usd' ? '$' : ''}${fmt(p)} ${g.curr === 'mgc' ? 'MGC' : ''}
+            </button>
+        </div>`;
+    }).join('');
 
-        renderLists();
-        updateHUD();
+    document.getElementById('pane-oc').innerHTML = OC_CATALOG.map(o => {
+        const cnt = state.owned[o.id] || 0;
+        const p = getPrice(o);
+        const can = o.curr === 'mgc' ? state.mgc >= p : state.usd >= p;
+        return `<div class="item-card">
+            <div class="item-body">
+                <div class="item-top">
+                    <div class="item-name">${o.name}</div>
+                    <span class="badge">Ур.${cnt}</span>
+                </div>
+                <div class="item-specs">${o.desc}</div>
+            </div>
+            <button class="buy-cta ${o.curr === 'usd' ? 'usd' : ''}" ${!can ? 'disabled' : ''} onclick="buyItem('oc','${o.id}')">
+                ${o.curr === 'usd' ? '$' : ''}${fmt(p)} ${o.curr === 'mgc' ? 'MGC' : ''}
+            </button>
+        </div>`;
+    }).join('');
+
+    document.getElementById('pane-infra').innerHTML = INFRA_CATALOG.map(i => {
+        const cnt = state.owned[i.id] || 0;
+        const p = getPrice(i);
+        const can = i.curr === 'mgc' ? state.mgc >= p : state.usd >= p;
+        return `<div class="item-card">
+            <div class="item-body">
+                <div class="item-top">
+                    <div class="item-name">${i.name}</div>
+                    <span class="badge">x${cnt}</span>
+                </div>
+                <div class="item-specs">${i.desc}</div>
+            </div>
+            <button class="buy-cta ${i.curr === 'usd' ? 'usd' : ''}" ${!can ? 'disabled' : ''} onclick="buyItem('infra','${i.id}')">
+                ${i.curr === 'usd' ? '$' : ''}${fmt(p)} ${i.curr === 'mgc' ? 'MGC' : ''}
+            </button>
+        </div>`;
+    }).join('');
+}
+
+function drawChart() {
+    const c = document.getElementById('rateChart');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    const w = c.width = c.clientWidth;
+    const h = c.height = c.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    const arr = state.rateHistory;
+    const min = Math.min(...arr) * 0.92;
+    const max = Math.max(...arr) * 1.08;
+
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    arr.forEach((v, idx) => {
+        const x = (idx / (arr.length - 1)) * (w - 20) + 10;
+        const y = h - 12 - ((v - min) / (max - min || 1)) * (h - 24);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
     });
+    ctx.stroke();
+}
 
-    window.buy = function(group, id) {
-        const list = state[group];
-        const item = list.find(x => x.id === id);
-        const cost = price(item);
-        if (state.balance < cost) return;
+function updateUI() {
+    const pps = getActualPPS();
+    const usedW = getUsedWatts();
+    const wPct = Math.min(100, (usedW / state.maxWatts) * 100);
 
-        if (group === 'gpus' && getUsedWatts() + item.watts > state.maxWatts) {
-            alert('Не хватает мощности БП! Купите блок питания во вкладке «Питание/Охлад».');
-            return;
-        }
+    document.getElementById('mgcBal').textContent = fmt(state.mgc);
+    document.getElementById('usdBal').textContent = '$' + fmt(state.usd);
+    document.getElementById('hashRate').textContent = fmt(pps * 14.2) + ' MH/s';
+    document.getElementById('ppsDisplay').textContent = fmt(pps) + ' MGC/с';
+    document.getElementById('rateDisplay').textContent = '$' + state.rate.toFixed(3);
 
-        state.balance -= cost;
-        item.count++;
+    document.getElementById('wPct').textContent = Math.round(wPct) + '%';
+    document.getElementById('wLabel').textContent = `${fmt(usedW)}/${fmt(state.maxWatts)}W`;
+    const wFill = document.getElementById('wFill');
+    wFill.style.width = wPct + '%';
+    wFill.style.background = wPct > 85 ? '#ef4444' : '#10b981';
 
-        if (group === 'oc') state.clickPower += item.ppc;
-        if (group === 'infra') {
-            if (item.type === 'watt') state.maxWatts += item.val;
-            if (item.type === 'cool') state.cooling += item.val;
-        }
+    document.getElementById('tVal').textContent = Math.round(state.temp) + '°C';
+    document.getElementById('multLabel').textContent = 'x' + getPrestigeMult().toFixed(1);
+    const tFill = document.getElementById('tFill');
+    tFill.style.width = Math.min(100, state.temp) + '%';
+    tFill.style.background = state.temp >= 92 ? '#ef4444' : (state.temp >= 72 ? '#f59e0b' : '#3b82f6');
 
-        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        save();
-        renderLists();
-        updateHUD();
-    };
+    const req = 250000 * Math.pow(8, state.prestige);
+    document.getElementById('dcLevel').textContent = `Уровень Империи ${state.prestige} (x${getPrestigeMult().toFixed(1)})`;
+    document.getElementById('prestigeReq').textContent = '$' + fmt(req);
+    document.getElementById('prestigeBtn').disabled = state.usd < req;
+}
 
-    window.claimQuest = function(id) {
-        const q = state.quests.find(x => x.id === id);
-        if (!q || q.claimed) return;
-        q.claimed = true;
-        state.balance += q.reward;
-        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        save();
-        renderLists();
-        updateHUD();
-    };
-
-    function updateHUD() {
-        const pps = getActualPPS();
-        const usedW = getUsedWatts();
-        document.getElementById('balVal').textContent = state.balance.toFixed(1) + ' COIN';
-        document.getElementById('hashVal').textContent = (pps * 12.5).toFixed(0);
-        document.getElementById('ppsVal').textContent = '+' + pps.toFixed(1) + ' / сек' + (state.temp >= 95 ? ' (ТРОТТЛИНГ!)' : '');
-        document.getElementById('ppcVal').textContent = state.clickPower.toFixed(1);
-
-        document.getElementById('wattText').textContent = `${usedW} / ${state.maxWatts}W`;
-        const wPct = Math.min(100, (usedW / state.maxWatts) * 100);
-        const wBar = document.getElementById('wattBar');
-        wBar.style.width = wPct + '%';
-        wBar.style.background = wPct > 85 ? '#ef4444' : '#22c55e';
-
-        document.getElementById('tempText').textContent = Math.round(state.temp) + '°C';
-        const tBar = document.getElementById('tempBar');
-        tBar.style.width = Math.min(100, state.temp) + '%';
-        tBar.style.background = state.temp >= 90 ? '#ef4444' : (state.temp >= 70 ? '#f59e0b' : '#3b82f6');
+// Тик игры и колебания курса на бирже
+setInterval(() => {
+    const pps = getActualPPS();
+    const heatGen = GPU_CATALOG.reduce((s, g) => s + g.heat * (state.owned[g.id] || 0), 0);
+    if (pps > 0) {
+        state.mgc += pps;
+        state.temp = Math.min(105, Math.max(32, state.temp + heatGen * 0.22 - state.cooling * 0.35));
+    } else {
+        state.temp = Math.max(32, state.temp - 0.6);
     }
 
-    function renderLists() {
-        // Видеокарты
-        document.getElementById('tab-gpus').innerHTML = state.gpus.map(g => {
-            const c = price(g);
-            const noPower = getUsedWatts() + g.watts > state.maxWatts;
-            return `<div class="card">
-                <div class="card-info">
-                    <div class="card-title">${g.name} <span style="color:#ff9900">[${g.count} шт.]</span></div>
-                    <div class="card-desc">+${g.pps} COIN/сек • Потребление: ${g.watts}W</div>
-                    ${noPower ? '<div class="card-meta">Требуется мощнее БП!</div>' : ''}
-                </div>
-                <button class="buy-btn" ${state.balance < c || noPower ? 'disabled' : ''} onclick="buy('gpus','${g.id}')">${c}</button>
-            </div>`;
-        }).join('');
+    // Живой курс криптовалюты
+    const delta = (Math.random() - 0.48) * 0.04;
+    state.rate = Math.max(0.15, Math.min(2.50, state.rate + delta));
+    state.rateHistory.push(state.rate);
+    if (state.rateHistory.length > 24) state.rateHistory.shift();
 
-        // Разгон
-        document.getElementById('tab-oc').innerHTML = state.oc.map(o => {
-            const c = price(o);
-            return `<div class="card">
-                <div class="card-info">
-                    <div class="card-title">${o.name} (ур. ${o.count})</div>
-                    <div class="card-desc">${o.desc}</div>
-                </div>
-                <button class="buy-btn" ${state.balance < c ? 'disabled' : ''} onclick="buy('oc','${o.id}')">${c}</button>
-            </div>`;
-        }).join('');
+    save();
+    updateUI();
+    renderAll();
+    if (document.getElementById('pane-market').classList.contains('active')) drawChart();
+}, 1000);
 
-        // Питание и охлад
-        document.getElementById('tab-infra').innerHTML = state.infra.map(i => {
-            const c = price(i);
-            return `<div class="card">
-                <div class="card-info">
-                    <div class="card-title">${i.name} (${i.count})</div>
-                    <div class="card-desc">${i.desc}</div>
-                </div>
-                <button class="buy-btn" ${state.balance < c ? 'disabled' : ''} onclick="buy('infra','${i.id}')">${c}</button>
-            </div>`;
-        }).join('');
-
-        // Квесты
-        document.getElementById('tab-pool').innerHTML = state.quests.map(q => {
-            let cur = 0;
-            if (q.type === 'clicks') cur = state.totalClicks;
-            if (q.type === 'gpus') cur = getTotalCards();
-            if (q.type === 'pps') cur = getRawPPS();
-            const done = cur >= q.target;
-            return `<div class="card">
-                <div class="card-info">
-                    <div class="card-title">${q.name}</div>
-                    <div class="card-desc">${q.desc} (${Math.min(cur, q.target).toFixed(0)}/${q.target})</div>
-                    <div class="card-meta">Награда: +${q.reward} COIN</div>
-                </div>
-                <button class="buy-btn" ${!done || q.claimed ? 'disabled' : ''} onclick="claimQuest('${q.id}')">
-                    ${q.claimed ? 'Готово' : (done ? 'Забрать' : 'В работе')}
-                </button>
-            </div>`;
-        }).join('');
-    }
-
-    // Отрисовка реалистичного стола, монитора и открытого рига с видеокартами
-    const canvas = document.getElementById('rigCanvas');
-    const ctx = canvas.getContext('2d');
-    let fanAngle = 0;
-
-    function drawScene() {
-        const w = canvas.width = stage.clientWidth;
-        const h = canvas.height = stage.clientHeight;
-        ctx.clearRect(0, 0, w, h);
-
-        // Фон стены (кирпичная/индустриальная текстура)
-        ctx.fillStyle = '#181412';
-        ctx.fillRect(0, 0, w, h);
-        ctx.strokeStyle = '#221c18';
-        ctx.lineWidth = 1;
-        for (let y = 0; y < h - 45; y += 22) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
-        }
-
-        // Деревянный массивный стол
-        const tableY = h - 48;
-        const woodGrad = ctx.createLinearGradient(0, tableY, 0, h);
-        woodGrad.addColorStop(0, '#5c3a21');
-        woodGrad.addColorStop(0.2, '#4a2e19');
-        woodGrad.addColorStop(1, '#29180c');
-        ctx.fillStyle = woodGrad;
-        ctx.fillRect(0, tableY, w, 48);
-        ctx.fillStyle = '#754c2e';
-        ctx.fillRect(0, tableY, w, 3);
-
-        // Монитор слева на столе
-        const monX = 24, monY = tableY - 95, monW = 115, monH = 75;
-        // Ножка монитора
-        ctx.fillStyle = '#2b2b2b';
-        ctx.fillRect(monX + 48, monY + monH, 18, 20);
-        ctx.fillRect(monX + 32, tableY - 4, 50, 4);
-        // Рамка монитора
-        ctx.fillStyle = '#1e1e1e';
-        ctx.strokeStyle = '#3d3d3d';
-        ctx.lineWidth = 2;
-        ctx.fillRect(monX, monY, monW, monH);
-        ctx.strokeRect(monX, monY, monW, monH);
-        // Экран с консолью майнера
-        ctx.fillStyle = '#090d0a';
-        ctx.fillRect(monX + 5, monY + 5, monW - 10, monH - 12);
-        ctx.fillStyle = '#22c55e';
-        ctx.font = '9px monospace';
-        ctx.fillText('> MINING ACTIVE', monX + 9, monY + 18);
-        ctx.fillText(`> ${getActualPPS().toFixed(1)} C/s`, monX + 9, monY + 31);
-        ctx.fillStyle = state.temp >= 90 ? '#ef4444' : '#38bdf8';
-        ctx.fillText(`> TEMP: ${Math.round(state.temp)}C`, monX + 9, monY + 44);
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillText(`> GPUs: ${getTotalCards()}`, monX + 9, monY + 57);
-
-        // Открытый металлический корпус / майнинг-риг справа
-        const rigX = 160, rigY = tableY - 145, rigW = w - 180, rigH = 145;
-        // Каркас рига
-        ctx.fillStyle = '#141619';
-        ctx.fillRect(rigX, rigY, rigW, rigH);
-        ctx.strokeStyle = '#4b5563';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(rigX, rigY, rigW, rigH);
-
-        // Рейки крепления
-        ctx.fillStyle = '#374151';
-        ctx.fillRect(rigX, rigY + 35, rigW, 4);
-        ctx.fillRect(rigX, rigY + 95, rigW, 4);
-
-        // Блок питания внизу корпуса
-        ctx.fillStyle = '#1f2937';
-        ctx.fillRect(rigX + 8, rigY + rigH - 34, 65, 28);
-        ctx.strokeStyle = '#4b5563';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(rigX + 8, rigY + rigH - 34, 65, 28);
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = '8px sans-serif';
-        ctx.fillText(state.maxWatts + 'W PSU', rigX + 14, rigY + rigH - 17);
-
-        // Отрисовка купленных видеокарт в слотах (до 10 визуальных слотов)
-        let visualCards = [];
-        state.gpus.forEach(g => {
-            for (let i = 0; i < g.count; i++) {
-                if (visualCards.length < 10) visualCards.push(g);
-            }
-        });
-
-        if (visualCards.length === 0) {
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '11px sans-serif';
-            ctx.fillText('Слоты пусты — купи GPU', rigX + 18, rigY + 68);
-        } else {
-            const slotW = Math.min(26, (rigW - 20) / Math.max(5, visualCards.length));
-            visualCards.forEach((card, idx) => {
-                const row = idx < 5 ? 0 : 1;
-                const col = idx % 5;
-                const cx = rigX + 12 + col * (slotW + 4);
-                const cy = rigY + 12 + row * 58;
-                const ch = 46;
-
-                // Кожух видеокарты
-                ctx.fillStyle = '#27272a';
-                ctx.fillRect(cx, cy, slotW, ch);
-                ctx.strokeStyle = card.color;
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(cx, cy, slotW, ch);
-
-                // Подсветка логотипа сверху карты
-                ctx.fillStyle = card.color;
-                ctx.fillRect(cx + 2, cy + 2, slotW - 4, 3);
-
-                // Вращающийся кулер на видеокарте
-                const fanX = cx + slotW / 2;
-                const fanY = cy + ch / 2 + 3;
-                const r = Math.min(8, slotW / 2 - 3);
-                ctx.beginPath();
-                ctx.arc(fanX, fanY, r, 0, Math.PI * 2);
-                ctx.fillStyle = '#18181b';
-                ctx.fill();
-
-                ctx.strokeStyle = '#a1a1aa';
-                ctx.lineWidth = 1.2;
-                for (let b = 0; b < 3; b++) {
-                    const a = fanAngle + (b * Math.PI * 2) / 3;
-                    ctx.beginPath();
-                    ctx.moveTo(fanX, fanY);
-                    ctx.lineTo(fanX + Math.cos(a) * r, fanY + Math.sin(a) * r);
-                    ctx.stroke();
-                }
-            });
-        }
-
-        fanAngle += 0.12 + (getTotalCards() * 0.015);
-        requestAnimationFrame(drawScene);
-    }
-
-    // Игровой тик (раз в секунду)
-    setInterval(() => {
-        const pps = getActualPPS();
-        const totalHeat = state.gpus.reduce((s, g) => s + g.heat * g.count, 0);
-        if (pps > 0) {
-            state.balance += pps;
-            state.temp = Math.min(105, Math.max(36, state.temp + (totalHeat * 0.25) - (state.cooling * 0.35)));
-        } else {
-            state.temp = Math.max(36, state.temp - 0.5);
-        }
-        save();
-        updateHUD();
-        renderLists();
-    }, 1000);
-
-    renderLists();
-    updateHUD();
-    drawScene();
+renderAll();
+updateUI();
 </script>
 </body>
 </html>
