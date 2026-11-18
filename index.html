@@ -3,448 +3,644 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic Mining Farm</title>
+    <title>Mining Rig Tycoon</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #0f1115;
-            --panel-bg: #181c24;
-            --accent: #ff9100;
-            --accent-glow: rgba(255, 145, 0, 0.3);
-            --text-main: #ffffff;
-            --text-muted: #8b949e;
-            --border: #262c36;
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 0;
+            background: #12100e;
+            color: #e6e1d6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
             overflow-x: hidden;
         }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
+        .app {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding-bottom: 70px;
+            background: radial-gradient(circle at 50% 20%, #26211c 0%, #110f0d 80%);
         }
 
-        /* Статистика баланса */
-        .stats-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 15px 20px;
-            width: 100%;
-            box-sizing: border-box;
-            text-align: center;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        /* Верхняя панель телеметрии */
+        .hud {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(15, 13, 11, 0.9);
+            border-bottom: 1px solid #332c25;
         }
-        .balance {
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--accent);
-            text-shadow: 0 0 10px var(--accent-glow);
-        }
-        .income {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-
-        /* Интерактивная зона: Стол и Компьютер */
-        .desk-area {
-            width: 100%;
-            height: 220px;
-            background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
-            border: 2px solid var(--border);
-            border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            cursor: pointer;
-            margin-bottom: 15px;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 8px 25px rgba(0,0,0,0.5);
-            transition: transform 0.05s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .desk-area:active {
-            transform: scale(0.98);
-        }
-
-        /* Монитор и корпус */
-        .pc-setup {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            pointer-events: none;
-        }
-        .monitor {
-            width: 130px;
-            height: 85px;
-            background: #090d12;
-            border: 3px solid #30363d;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 0 15px rgba(255, 145, 0, 0.15);
-        }
-        .monitor-screen {
-            font-size: 26px;
-        }
-        .monitor-led {
-            width: 6px;
-            height: 6px;
-            background-color: #00ff66;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 6px;
-            right: 8px;
-            box-shadow: 0 0 6px #00ff66;
-        }
-        .stand {
-            width: 30px;
-            height: 15px;
-            background: #21262d;
-        }
-        .desk-table {
-            width: 90%;
-            height: 12px;
-            background: #30363d;
+        .hud-box {
+            background: #1a1714;
+            border: 1px solid #383028;
             border-radius: 6px;
-            border-top: 2px solid #484f58;
+            padding: 6px 10px;
+        }
+        .hud-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8c8275;
+        }
+        .hud-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff9900;
+            margin-top: 2px;
+        }
+        .hud-sub {
+            font-size: 11px;
+            color: #a89f91;
         }
 
-        /* Вкладки */
-        .tabs {
+        /* Полоски температуры и энергии */
+        .bars {
             display: flex;
-            width: 100%;
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
+            gap: 8px;
+            padding: 0 12px 8px;
+            background: rgba(15, 13, 11, 0.9);
+            border-bottom: 1px solid #332c25;
         }
-        .tab-btn {
+        .bar-wrap {
             flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
         }
-        .tab-btn.active {
-            background: var(--accent);
-            color: #000;
-            box-shadow: 0 2px 10px var(--accent-glow);
-        }
-
-        /* Контент вкладок */
-        .tab-content {
-            display: none;
-            width: 100%;
-        }
-        .tab-content.active {
+        .bar-head {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 3px;
+            color: #b5aba0;
+        }
+        .bar-track {
+            height: 6px;
+            background: #24201c;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            transition: width 0.2s, background-color 0.3s;
         }
 
-        /* Карточки апгрейдов и комплектующих */
-        .shop-item {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 12px 15px;
+        /* Сцена рабочего места (Canvas) */
+        .rig-stage {
+            position: relative;
+            width: 100%;
+            height: 235px;
+            cursor: pointer;
+            border-bottom: 2px solid #3d342b;
+            background: #171412;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .cool-btn {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            background: #1f2933;
+            border: 1px solid #3b82f6;
+            color: #93c5fd;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .cool-btn:active {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        /* Вкладки навигации */
+        .nav {
+            display: flex;
+            background: #161310;
+            border-bottom: 1px solid #332c25;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 11px 4px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #8c8275;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .nav-btn.active {
+            color: #ff9900;
+            border-bottom-color: #ff9900;
+            background: rgba(255, 153, 0, 0.06);
+        }
+
+        /* Список улучшений */
+        .content {
+            flex: 1;
+            padding: 10px 12px 24px;
+            overflow-y: auto;
+        }
+        .tab-pane {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .tab-pane.active {
+            display: flex;
+        }
+        .card {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: border-color 0.2s;
+            background: #1c1815;
+            border: 1px solid #332c25;
+            border-radius: 6px;
+            padding: 10px 12px;
         }
-        .shop-item:hover {
-            border-color: var(--accent);
+        .card-info {
+            flex: 1;
+            padding-right: 10px;
         }
-        .item-details h4 {
-            margin: 0 0 3px 0;
-            font-size: 15px;
-            color: var(--text-main);
-        }
-        .item-details p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-        .action-btn {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 14px;
+        .card-title {
+            font-size: 14px;
             font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            transition: opacity 0.2s;
+            color: #f0ece1;
         }
-        .action-btn:disabled {
-            background: #21262d;
-            color: #484f58;
+        .card-desc {
+            font-size: 11px;
+            color: #968c7e;
+            margin-top: 3px;
+        }
+        .card-meta {
+            font-size: 10px;
+            color: #ff9900;
+            margin-top: 3px;
+        }
+        .buy-btn {
+            background: #d97706;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 82px;
+            cursor: pointer;
+        }
+        .buy-btn:disabled {
+            background: #2b2520;
+            color: #635b52;
             cursor: not-allowed;
         }
 
-        /* Эффект клика (цифры вверх) */
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
-        }
-        .floating-text {
+        .float-num {
             position: absolute;
-            color: var(--accent);
-            font-weight: 900;
-            font-size: 20px;
+            color: #ffb703;
+            font-weight: 800;
+            font-size: 16px;
             pointer-events: none;
-            text-shadow: 0 0 5px rgba(0,0,0,0.8);
-            animation: floatUp 0.6s ease-out forwards;
+            text-shadow: 0 2px 4px #000;
+            animation: rise 0.65s ease-out forwards;
+        }
+        @keyframes rise {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-45px); }
         }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <!-- Блок баланса -->
-        <div class="stats-card">
-            <div class="balance" id="balance">0 COIN</div>
-            <div class="income">Пассив: <span id="pps">0</span>/сек | Клик: +<span id="ppc">1</span></div>
+<div class="app">
+    <div class="hud">
+        <div class="hud-box">
+            <div class="hud-label">Баланс фермы</div>
+            <div class="hud-val" id="balVal">0.00 COIN</div>
+            <div class="hud-sub">Хешрейт: <span id="hashVal">0</span> MH/s</div>
         </div>
-
-        <!-- Стол и компьютер (Кликабельная зона) -->
-        <div class="desk-area" id="mineBtn">
-            <div class="pc-setup">
-                <div class="monitor">
-                    <div class="monitor-screen" id="pcIcon">💻</div>
-                    <div class="monitor-led"></div>
-                </div>
-                <div class="stand"></div>
-                <div class="desk-table"></div>
-            </div>
-        </div>
-
-        <!-- Навигация по вкладкам -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('farm')">🖥 Ферма</button>
-            <button class="tab-btn" onclick="switchTab('overclock')">⚡ Разгон</button>
-            <button class="tab-btn" onclick="switchTab('upgrades')">🛠 Железо</button>
-        </div>
-
-        <!-- Вкладка 1: Майнинг Ферма (Автодоход) -->
-        <div id="tab-farm" class="tab-content active">
-            <div id="farm-shop"></div>
-        </div>
-
-        <!-- Вкладка 2: Разгон (Усиление клика) -->
-        <div id="tab-overclock" class="tab-content">
-            <div id="click-shop"></div>
-        </div>
-
-        <!-- Вкладка 3: Железо (Визуальные апгрейды ПК и стола) -->
-        <div id="tab-upgrades" class="tab-content">
-            <div id="visual-shop"></div>
+        <div class="hud-box">
+            <div class="hud-label">Доходность</div>
+            <div class="hud-val" id="ppsVal">+0.0 / сек</div>
+            <div class="hud-sub">За клик: +<span id="ppcVal">1.0</span></div>
         </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    <div class="bars">
+        <div class="bar-wrap">
+            <div class="bar-head"><span>Питание БП</span><span id="wattText">0 / 450W</span></div>
+            <div class="bar-track"><div class="bar-fill" id="wattBar" style="width:0%; background:#22c55e;"></div></div>
+        </div>
+        <div class="bar-wrap">
+            <div class="bar-head"><span>Температура</span><span id="tempText">38°C</span></div>
+            <div class="bar-track"><div class="bar-fill" id="tempBar" style="width:38%; background:#3b82f6;"></div></div>
+        </div>
+    </div>
 
-        let state = JSON.parse(localStorage.getItem('magicFarmSave')) || {
-            balance: 0,
-            clickPower: 1,
-            level: 0,
-            farmItems: [
-                { id: 0, name: "USB-флешка майнер", desc: "+1 монета/сек", baseCost: 15, pps: 1, count: 0 },
-                { id: 1, name: "Старый офисник", desc: "+6 монет/сек", baseCost: 120, pps: 6, count: 0 },
-                { id: 2, name: "GTX 1060 6GB", desc: "+30 монет/сек", baseCost: 650, pps: 30, count: 0 },
-                { id: 3, name: "Ферма на 6 карт", desc: "+150 монет/сек", baseCost: 3200, pps: 150, count: 0 },
-                { id: 4, name: "ASIC Antminer S19", desc: "+750 монет/сек", baseCost: 15000, pps: 750, count: 0 },
-                { id: 5, name: "Квантовый сервер", desc: "+3800 монет/сек", baseCost: 80000, pps: 3800, count: 0 }
-            ],
-            clickItems: [
-                { id: 10, name: "Обычная мышка", desc: "+1 к силе клика", baseCost: 25, ppc: 1, count: 0 },
-                { id: 11, name: "Геймерская мышь", desc: "+5 к силе клика", baseCost: 200, ppc: 5, count: 0 },
-                { id: 12, name: "Механическая клавиатура", desc: "+25 к силе клика", baseCost: 1100, ppc: 25, count: 0 },
-                { id: 13, name: "Макросный скрипт", desc: "+120 к силе клика", baseCost: 6000, ppc: 120, count: 0 },
-                { id: 14, name: "Квантовый кликер", desc: "+600 к силе клика", baseCost: 30000, ppc: 600, count: 0 }
-            ],
-            visualItems: [
-                { id: 20, name: "Лампа с RGB", desc: "Улучшает стиль комнаты", baseCost: 100, icon: "💡", count: 0 },
-                { id: 21, name: "Игровой монитор 144Hz", desc: "Красивый изогнутый экран", baseCost: 500, icon: "🖥️", count: 0 },
-                { id: 22, name: "Мощный ПК в сборе", desc: "Топовый корпус с подсветкой", baseCost: 2500, icon: "⚡", count: 0 },
-                { id: 23, name: "Киберспортивный стол", desc: "Профессиональный сетап", baseCost: 12000, icon: "💺", count: 0 }
-            ]
-        };
+    <div class="rig-stage" id="stage">
+        <canvas id="rigCanvas"></canvas>
+        <button class="cool-btn" id="coolBtn">Продуть кулеры (-12°C)</button>
+    </div>
 
-        const balanceEl = document.getElementById('balance');
-        const ppsEl = document.getElementById('pps');
-        const ppcEl = document.getElementById('ppc');
-        const mineBtn = document.getElementById('mineBtn');
-        const pcIcon = document.getElementById('pcIcon');
+    <div class="nav">
+        <button class="nav-btn active" data-tab="gpus">Видеокарты</button>
+        <button class="nav-btn" data-tab="oc">Разгон</button>
+        <button class="nav-btn" data-tab="infra">Питание/Охлад</button>
+        <button class="nav-btn" data-tab="pool">Пул / Задачи</button>
+    </div>
 
-        function getCost(item) {
-            return Math.floor(item.baseCost * Math.pow(1.15, item.count));
+    <div class="content">
+        <div class="tab-pane active" id="tab-gpus"></div>
+        <div class="tab-pane" id="tab-oc"></div>
+        <div class="tab-pane" id="tab-infra"></div>
+        <div class="tab-pane" id="tab-pool"></div>
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.expand();
+
+    const defaultState = {
+        balance: 0,
+        clickPower: 1,
+        temp: 38,
+        maxWatts: 450,
+        cooling: 1,
+        totalClicks: 0,
+        gpus: [
+            { id: 'g1', name: 'GTX 1060 6GB', pps: 1.5, watts: 120, heat: 0.4, cost: 20, count: 0, color: '#22c55e' },
+            { id: 'g2', name: 'RX 580 8GB Nitro+', pps: 6, watts: 185, heat: 0.8, cost: 110, count: 0, color: '#3b82f6' },
+            { id: 'g3', name: 'RTX 3060 Ti', pps: 24, watts: 200, heat: 1.1, cost: 580, count: 0, color: '#a855f7' },
+            { id: 'g4', name: 'RTX 3080 Suprim', pps: 95, watts: 320, heat: 1.8, cost: 2800, count: 0, color: '#f59e0b' },
+            { id: 'g5', name: 'RTX 4090 Strix', pps: 420, watts: 450, heat: 2.5, cost: 14500, count: 0, color: '#ef4444' },
+            { id: 'g6', name: 'ASIC Antminer S21', pps: 1900, watts: 1100, heat: 4.5, cost: 72000, count: 0, color: '#06b6d4' }
+        ],
+        oc: [
+            { id: 'o1', name: 'Андервольтинг ядра', desc: '+1.5 к мощи клика', ppc: 1.5, cost: 30, count: 0 },
+            { id: 'o2', name: 'Прошивка таймингов BIOS', desc: '+7 к мощи клика', ppc: 7, cost: 220, count: 0 },
+            { id: 'o3', name: 'Жидкий металл на чип', desc: '+35 к мощи клика', ppc: 35, cost: 1400, count: 0 },
+            { id: 'o4', name: 'Кастомный скрипт майнера', desc: '+160 к мощи клика', ppc: 160, cost: 8500, count: 0 }
+        ],
+        infra: [
+            { id: 'i1', name: 'Блок питания +500W', desc: 'Увеличивает лимит мощности фермы', type: 'watt', val: 500, cost: 80, count: 0 },
+            { id: 'i2', name: 'Серверный БП +1800W', desc: 'Для крупных ригов на 6-12 карт', type: 'watt', val: 1800, cost: 950, count: 0 },
+            { id: 'i3', name: 'Стойка кулеров Delta', desc: 'Снижает нагрев на 2 единицы/сек', type: 'cool', val: 2, cost: 150, count: 0 },
+            { id: 'i4', name: 'Контур водяного охлаждения', desc: 'Мощный отвод тепла (-7/сек)', type: 'cool', val: 7, cost: 1800, count: 0 }
+        ],
+        quests: [
+            { id: 'q1', name: 'Первый запуск', desc: 'Сделать 50 кликов по ригу', target: 50, type: 'clicks', reward: 60, claimed: false },
+            { id: 'q2', name: 'Домашний майнер', desc: 'Купить 3 любые видеокарты', target: 3, type: 'gpus', reward: 250, claimed: false },
+            { id: 'q3', name: 'Промышленный масштаб', desc: 'Достичь дохода 100 COIN/сек', target: 100, type: 'pps', reward: 1500, claimed: false },
+            { id: 'q4', name: 'Крипто-барон', desc: 'Собрать 10 видеокарт в стойке', target: 10, type: 'gpus', reward: 8000, claimed: false }
+        ]
+    };
+
+    let state = JSON.parse(localStorage.getItem('rigTycoonV2')) || defaultState;
+
+    function save() {
+        localStorage.setItem('rigTycoonV2', JSON.stringify(state));
+    }
+
+    function getUsedWatts() {
+        return state.gpus.reduce((s, g) => s + g.watts * g.count, 0);
+    }
+
+    function getTotalCards() {
+        return state.gpus.reduce((s, g) => s + g.count, 0);
+    }
+
+    function getRawPPS() {
+        return state.gpus.reduce((s, g) => s + g.pps * g.count, 0);
+    }
+
+    function getActualPPS() {
+        const raw = getRawPPS();
+        return state.temp >= 95 ? raw * 0.5 : raw;
+    }
+
+    function price(item) {
+        return Math.floor(item.cost * Math.pow(1.18, item.count));
+    }
+
+    // Вкладки
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Кнопка продувки кулеров
+    document.getElementById('coolBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.temp = Math.max(35, state.temp - 12);
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        updateHUD();
+    });
+
+    // Клик по сцене
+    const stage = document.getElementById('stage');
+    stage.addEventListener('click', (e) => {
+        state.balance += state.clickPower;
+        state.totalClicks++;
+        state.temp = Math.min(105, state.temp + 0.35);
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+        const rect = stage.getBoundingClientRect();
+        const el = document.createElement('div');
+        el.className = 'float-num';
+        el.textContent = '+' + state.clickPower.toFixed(1);
+        el.style.left = (e.clientX - rect.left - 15) + 'px';
+        el.style.top = (e.clientY - rect.top - 10) + 'px';
+        stage.appendChild(el);
+        setTimeout(() => el.remove(), 650);
+
+        renderLists();
+        updateHUD();
+    });
+
+    window.buy = function(group, id) {
+        const list = state[group];
+        const item = list.find(x => x.id === id);
+        const cost = price(item);
+        if (state.balance < cost) return;
+
+        if (group === 'gpus' && getUsedWatts() + item.watts > state.maxWatts) {
+            alert('Не хватает мощности БП! Купите блок питания во вкладке «Питание/Охлад».');
+            return;
         }
 
-        function getTotalPPS() {
-            return state.farmItems.reduce((sum, item) => sum + (item.pps * item.count), 0);
+        state.balance -= cost;
+        item.count++;
+
+        if (group === 'oc') state.clickPower += item.ppc;
+        if (group === 'infra') {
+            if (item.type === 'watt') state.maxWatts += item.val;
+            if (item.type === 'cool') state.cooling += item.val;
         }
 
-        function saveGame() {
-            localStorage.setItem('magicFarmSave', JSON.stringify(state));
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        save();
+        renderLists();
+        updateHUD();
+    };
+
+    window.claimQuest = function(id) {
+        const q = state.quests.find(x => x.id === id);
+        if (!q || q.claimed) return;
+        q.claimed = true;
+        state.balance += q.reward;
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        save();
+        renderLists();
+        updateHUD();
+    };
+
+    function updateHUD() {
+        const pps = getActualPPS();
+        const usedW = getUsedWatts();
+        document.getElementById('balVal').textContent = state.balance.toFixed(1) + ' COIN';
+        document.getElementById('hashVal').textContent = (pps * 12.5).toFixed(0);
+        document.getElementById('ppsVal').textContent = '+' + pps.toFixed(1) + ' / сек' + (state.temp >= 95 ? ' (ТРОТТЛИНГ!)' : '');
+        document.getElementById('ppcVal').textContent = state.clickPower.toFixed(1);
+
+        document.getElementById('wattText').textContent = `${usedW} / ${state.maxWatts}W`;
+        const wPct = Math.min(100, (usedW / state.maxWatts) * 100);
+        const wBar = document.getElementById('wattBar');
+        wBar.style.width = wPct + '%';
+        wBar.style.background = wPct > 85 ? '#ef4444' : '#22c55e';
+
+        document.getElementById('tempText').textContent = Math.round(state.temp) + '°C';
+        const tBar = document.getElementById('tempBar');
+        tBar.style.width = Math.min(100, state.temp) + '%';
+        tBar.style.background = state.temp >= 90 ? '#ef4444' : (state.temp >= 70 ? '#f59e0b' : '#3b82f6');
+    }
+
+    function renderLists() {
+        // Видеокарты
+        document.getElementById('tab-gpus').innerHTML = state.gpus.map(g => {
+            const c = price(g);
+            const noPower = getUsedWatts() + g.watts > state.maxWatts;
+            return `<div class="card">
+                <div class="card-info">
+                    <div class="card-title">${g.name} <span style="color:#ff9900">[${g.count} шт.]</span></div>
+                    <div class="card-desc">+${g.pps} COIN/сек • Потребление: ${g.watts}W</div>
+                    ${noPower ? '<div class="card-meta">Требуется мощнее БП!</div>' : ''}
+                </div>
+                <button class="buy-btn" ${state.balance < c || noPower ? 'disabled' : ''} onclick="buy('gpus','${g.id}')">${c}</button>
+            </div>`;
+        }).join('');
+
+        // Разгон
+        document.getElementById('tab-oc').innerHTML = state.oc.map(o => {
+            const c = price(o);
+            return `<div class="card">
+                <div class="card-info">
+                    <div class="card-title">${o.name} (ур. ${o.count})</div>
+                    <div class="card-desc">${o.desc}</div>
+                </div>
+                <button class="buy-btn" ${state.balance < c ? 'disabled' : ''} onclick="buy('oc','${o.id}')">${c}</button>
+            </div>`;
+        }).join('');
+
+        // Питание и охлад
+        document.getElementById('tab-infra').innerHTML = state.infra.map(i => {
+            const c = price(i);
+            return `<div class="card">
+                <div class="card-info">
+                    <div class="card-title">${i.name} (${i.count})</div>
+                    <div class="card-desc">${i.desc}</div>
+                </div>
+                <button class="buy-btn" ${state.balance < c ? 'disabled' : ''} onclick="buy('infra','${i.id}')">${c}</button>
+            </div>`;
+        }).join('');
+
+        // Квесты
+        document.getElementById('tab-pool').innerHTML = state.quests.map(q => {
+            let cur = 0;
+            if (q.type === 'clicks') cur = state.totalClicks;
+            if (q.type === 'gpus') cur = getTotalCards();
+            if (q.type === 'pps') cur = getRawPPS();
+            const done = cur >= q.target;
+            return `<div class="card">
+                <div class="card-info">
+                    <div class="card-title">${q.name}</div>
+                    <div class="card-desc">${q.desc} (${Math.min(cur, q.target).toFixed(0)}/${q.target})</div>
+                    <div class="card-meta">Награда: +${q.reward} COIN</div>
+                </div>
+                <button class="buy-btn" ${!done || q.claimed ? 'disabled' : ''} onclick="claimQuest('${q.id}')">
+                    ${q.claimed ? 'Готово' : (done ? 'Забрать' : 'В работе')}
+                </button>
+            </div>`;
+        }).join('');
+    }
+
+    // Отрисовка реалистичного стола, монитора и открытого рига с видеокартами
+    const canvas = document.getElementById('rigCanvas');
+    const ctx = canvas.getContext('2d');
+    let fanAngle = 0;
+
+    function drawScene() {
+        const w = canvas.width = stage.clientWidth;
+        const h = canvas.height = stage.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        // Фон стены (кирпичная/индустриальная текстура)
+        ctx.fillStyle = '#181412';
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = '#221c18';
+        ctx.lineWidth = 1;
+        for (let y = 0; y < h - 45; y += 22) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
         }
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById('tab-' + tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
+        // Деревянный массивный стол
+        const tableY = h - 48;
+        const woodGrad = ctx.createLinearGradient(0, tableY, 0, h);
+        woodGrad.addColorStop(0, '#5c3a21');
+        woodGrad.addColorStop(0.2, '#4a2e19');
+        woodGrad.addColorStop(1, '#29180c');
+        ctx.fillStyle = woodGrad;
+        ctx.fillRect(0, tableY, w, 48);
+        ctx.fillStyle = '#754c2e';
+        ctx.fillRect(0, tableY, w, 3);
 
-        function updateUI() {
-            balanceEl.innerText = Math.floor(state.balance) + " COIN";
-            ppsEl.innerText = getTotalPPS();
-            ppcEl.innerText = state.clickPower;
+        // Монитор слева на столе
+        const monX = 24, monY = tableY - 95, monW = 115, monH = 75;
+        // Ножка монитора
+        ctx.fillStyle = '#2b2b2b';
+        ctx.fillRect(monX + 48, monY + monH, 18, 20);
+        ctx.fillRect(monX + 32, tableY - 4, 50, 4);
+        // Рамка монитора
+        ctx.fillStyle = '#1e1e1e';
+        ctx.strokeStyle = '#3d3d3d';
+        ctx.lineWidth = 2;
+        ctx.fillRect(monX, monY, monW, monH);
+        ctx.strokeRect(monX, monY, monW, monH);
+        // Экран с консолью майнера
+        ctx.fillStyle = '#090d0a';
+        ctx.fillRect(monX + 5, monY + 5, monW - 10, monH - 12);
+        ctx.fillStyle = '#22c55e';
+        ctx.font = '9px monospace';
+        ctx.fillText('> MINING ACTIVE', monX + 9, monY + 18);
+        ctx.fillText(`> ${getActualPPS().toFixed(1)} C/s`, monX + 9, monY + 31);
+        ctx.fillStyle = state.temp >= 90 ? '#ef4444' : '#38bdf8';
+        ctx.fillText(`> TEMP: ${Math.round(state.temp)}C`, monX + 9, monY + 44);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText(`> GPUs: ${getTotalCards()}`, monX + 9, monY + 57);
 
-            // Обновляем иконку ПК в зависимости от купленных визуальных апгрейдов
-            if (state.visualItems[2].count > 0) pcIcon.innerText = "⚡";
-            else if (state.visualItems[1].count > 0) pcIcon.innerText = "🖥️";
-            else if (state.visualItems[0].count > 0) pcIcon.innerText = "💡";
-            else pcIcon.innerText = "💻";
+        // Открытый металлический корпус / майнинг-риг справа
+        const rigX = 160, rigY = tableY - 145, rigW = w - 180, rigH = 145;
+        // Каркас рига
+        ctx.fillStyle = '#141619';
+        ctx.fillRect(rigX, rigY, rigW, rigH);
+        ctx.strokeStyle = '#4b5563';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(rigX, rigY, rigW, rigH);
 
-            // Рендер вкладки Ферма
-            let farmHtml = '';
-            state.farmItems.forEach(item => {
-                const cost = getCost(item);
-                farmHtml += `
-                    <div class="shop-item">
-                        <div class="item-details">
-                            <h4>${item.name} (ур. ${item.count})</h4>
-                            <p>${item.desc}</p>
-                        </div>
-                        <button class="action-btn" ${state.balance < cost ? 'disabled' : ''} onclick="buyItem(0, ${item.id})">
-                            ${cost} 🪙
-                        </button>
-                    </div>`;
-            });
-            document.getElementById('farm-shop').innerHTML = farmHtml;
+        // Рейки крепления
+        ctx.fillStyle = '#374151';
+        ctx.fillRect(rigX, rigY + 35, rigW, 4);
+        ctx.fillRect(rigX, rigY + 95, rigW, 4);
 
-            // Рендер вкладки Разгон
-            let clickHtml = '';
-            state.clickItems.forEach(item => {
-                const cost = getCost(item);
-                clickHtml += `
-                    <div class="shop-item">
-                        <div class="item-details">
-                            <h4>${item.name} (ур. ${item.count})</h4>
-                            <p>${item.desc}</p>
-                        </div>
-                        <button class="action-btn" ${state.balance < cost ? 'disabled' : ''} onclick="buyItem(1, ${item.id})">
-                            ${cost} 🪙
-                        </button>
-                    </div>`;
-            });
-            document.getElementById('click-shop').innerHTML = clickHtml;
+        // Блок питания внизу корпуса
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(rigX + 8, rigY + rigH - 34, 65, 28);
+        ctx.strokeStyle = '#4b5563';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(rigX + 8, rigY + rigH - 34, 65, 28);
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '8px sans-serif';
+        ctx.fillText(state.maxWatts + 'W PSU', rigX + 14, rigY + rigH - 17);
 
-            // Рендер вкладки Железо
-            let visualHtml = '';
-            state.visualItems.forEach(item => {
-                const cost = getCost(item);
-                visualHtml += `
-                    <div class="shop-item">
-                        <div class="item-details">
-                            <h4>${item.icon} ${item.name} (${item.count})</h4>
-                            <p>${item.desc}</p>
-                        </div>
-                        <button class="action-btn" ${state.balance < cost || item.count > 0 ? 'disabled' : ''} onclick="buyItem(2, ${item.id})">
-                            ${item.count > 0 ? 'Куплено' : cost + ' 🪙'}
-                        </button>
-                    </div>`;
-            });
-            document.getElementById('visual-shop').innerHTML = visualHtml;
-        }
-
-        window.buyItem = function(category, id) {
-            let list = category === 0 ? state.farmItems : (category === 1 ? state.clickItems : state.visualItems);
-            const item = list.find(u => u.id === id);
-            const cost = getCost(item);
-
-            if (state.balance >= cost) {
-                state.balance -= cost;
-                item.count++;
-
-                if (category === 1) {
-                    state.clickPower += item.ppc;
-                }
-
-                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                saveGame();
-                updateUI();
+        // Отрисовка купленных видеокарт в слотах (до 10 визуальных слотов)
+        let visualCards = [];
+        state.gpus.forEach(g => {
+            for (let i = 0; i < g.count; i++) {
+                if (visualCards.length < 10) visualCards.push(g);
             }
-        }
-
-        // Клик по столу с компьютером
-        mineBtn.addEventListener('click', (e) => {
-            state.balance += state.clickPower;
-
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-
-            // Создаем анимированную цифру клика
-            const rect = mineBtn.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const floatEl = document.createElement('div');
-            floatEl.className = 'floating-text';
-            floatEl.innerText = "+" + state.clickPower;
-            floatEl.style.left = x + 'px';
-            floatEl.style.top = y + 'px';
-            mineBtn.appendChild(floatEl);
-
-            setTimeout(() => floatEl.remove(), 600);
-
-            saveGame();
-            updateUI();
         });
 
-        // Пассивный доход каждую секунду
-        setInterval(() => {
-            const pps = getTotalPPS();
-            if (pps > 0) {
-                state.balance += pps;
-                saveGame();
-                updateUI();
-            }
-        }, 1000);
+        if (visualCards.length === 0) {
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('Слоты пусты — купи GPU', rigX + 18, rigY + 68);
+        } else {
+            const slotW = Math.min(26, (rigW - 20) / Math.max(5, visualCards.length));
+            visualCards.forEach((card, idx) => {
+                const row = idx < 5 ? 0 : 1;
+                const col = idx % 5;
+                const cx = rigX + 12 + col * (slotW + 4);
+                const cy = rigY + 12 + row * 58;
+                const ch = 46;
 
-        updateUI();
-    </script>
+                // Кожух видеокарты
+                ctx.fillStyle = '#27272a';
+                ctx.fillRect(cx, cy, slotW, ch);
+                ctx.strokeStyle = card.color;
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(cx, cy, slotW, ch);
+
+                // Подсветка логотипа сверху карты
+                ctx.fillStyle = card.color;
+                ctx.fillRect(cx + 2, cy + 2, slotW - 4, 3);
+
+                // Вращающийся кулер на видеокарте
+                const fanX = cx + slotW / 2;
+                const fanY = cy + ch / 2 + 3;
+                const r = Math.min(8, slotW / 2 - 3);
+                ctx.beginPath();
+                ctx.arc(fanX, fanY, r, 0, Math.PI * 2);
+                ctx.fillStyle = '#18181b';
+                ctx.fill();
+
+                ctx.strokeStyle = '#a1a1aa';
+                ctx.lineWidth = 1.2;
+                for (let b = 0; b < 3; b++) {
+                    const a = fanAngle + (b * Math.PI * 2) / 3;
+                    ctx.beginPath();
+                    ctx.moveTo(fanX, fanY);
+                    ctx.lineTo(fanX + Math.cos(a) * r, fanY + Math.sin(a) * r);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        fanAngle += 0.12 + (getTotalCards() * 0.015);
+        requestAnimationFrame(drawScene);
+    }
+
+    // Игровой тик (раз в секунду)
+    setInterval(() => {
+        const pps = getActualPPS();
+        const totalHeat = state.gpus.reduce((s, g) => s + g.heat * g.count, 0);
+        if (pps > 0) {
+            state.balance += pps;
+            state.temp = Math.min(105, Math.max(36, state.temp + (totalHeat * 0.25) - (state.cooling * 0.35)));
+        } else {
+            state.temp = Math.max(36, state.temp - 0.5);
+        }
+        save();
+        updateHUD();
+        renderLists();
+    }, 1000);
+
+    renderLists();
+    updateHUD();
+    drawScene();
+</script>
 </body>
 </html>
